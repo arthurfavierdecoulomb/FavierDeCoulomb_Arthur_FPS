@@ -1,0 +1,24 @@
+# Blender 4.1.1 MTL File: 'naga411.blend'
+# www.blender.org
+
+newmtl Ammo
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Ns C:/Users/sevvl/OneDrive/Documents/Adobe/Adobe Substance 3D Painter/export/Nagant/Ammo/2/DefaultMaterial_Roughness.png
+map_refl C:/Users/sevvl/OneDrive/Documents/Adobe/Adobe Substance 3D Painter/export/Nagant/Ammo/2/DefaultMaterial_Metallic.png
+
+newmtl Nagant
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Ns C:/Users/sevvl/OneDrive/Documents/Adobe/Adobe Substance 3D Painter/export/Nagant/2/Material.005_Roughness.png
+map_refl C:/Users/sevvl/OneDrive/Documents/Adobe/Adobe Substance 3D Painter/export/Nagant/2/Material.005_Metallic.png
