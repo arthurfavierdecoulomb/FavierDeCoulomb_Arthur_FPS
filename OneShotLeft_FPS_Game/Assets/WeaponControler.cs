@@ -3,8 +3,13 @@ using UnityEngine;
 public class WeaponController : MonoBehaviour
 {
     [Header("References")]
-    public Transform weaponHolder;
+    public Transform handTransform; // La main qui tient l'arme
     public PlayerMovement playerMovement;
+    public Transform cameraTransform;
+
+    [Header("Hand Position")]
+    public Vector3 handPositionOffset = new Vector3(0.5f, -0.3f, 0.5f);
+    public Vector3 handRotationOffset = new Vector3(0f, -90f, 0f);
 
     [Header("Weapon Sway")]
     public float swayAmount = 0.02f;
@@ -26,11 +31,6 @@ public class WeaponController : MonoBehaviour
     public float landRotation = 15f;
     public float jumpTransitionSpeed = 10f;
 
-    [Header("Sprint")]
-    public Vector3 sprintOffset = new Vector3(0.15f, -0.05f, 0.1f);
-    public float sprintRotation = 10f;
-    public float sprintBobMultiplier = 1.5f;
-
     private Vector3 initialPosition;
     private Quaternion initialRotation;
     private Vector3 swayPos;
@@ -43,12 +43,30 @@ public class WeaponController : MonoBehaviour
 
     void Start()
     {
-        if (weaponHolder == null)
-            weaponHolder = transform;
+        if (handTransform == null)
+            handTransform = transform;
 
-        initialPosition = weaponHolder.localPosition;
-        initialRotation = weaponHolder.localRotation;
+        if (cameraTransform == null)
+            cameraTransform = Camera.main.transform;
+
+        SetupHandPosition();
+
+        initialPosition = handTransform.localPosition;
+        initialRotation = handTransform.localRotation;
         wasGrounded = true;
+    }
+
+    void SetupHandPosition()
+    {
+        // Positionner la main comme enfant de la caméra si ce n'est pas déjà fait
+        if (handTransform.parent != cameraTransform)
+        {
+            handTransform.SetParent(cameraTransform);
+        }
+
+        // Appliquer la position et rotation initiale
+        handTransform.localPosition = handPositionOffset;
+        handTransform.localRotation = Quaternion.Euler(handRotationOffset);
     }
 
     void Update()
@@ -158,8 +176,8 @@ public class WeaponController : MonoBehaviour
         Quaternion swayRotation = Quaternion.Euler(swayRot.x, swayRot.y, swayRot.z + targetRotationZ);
         Quaternion finalRotation = initialRotation * swayRotation;
 
-        // Appliquer au weaponHolder
-        weaponHolder.localPosition = finalPosition;
-        weaponHolder.localRotation = finalRotation;
+        // Appliquer à la main
+        handTransform.localPosition = finalPosition;
+        handTransform.localRotation = finalRotation;
     }
 }
