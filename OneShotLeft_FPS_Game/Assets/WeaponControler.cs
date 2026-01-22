@@ -3,13 +3,23 @@ using UnityEngine;
 public class WeaponController : MonoBehaviour
 {
     [Header("References")]
-    public Transform handTransform; // La main qui tient l'arme
+    public Transform rightArmTransform; // Bras droit
+    public Transform leftArmTransform; // Bras gauche
+    public Transform weaponTransform; // L'arme
     public PlayerMovement playerMovement;
     public Transform cameraTransform;
 
-    [Header("Hand Position")]
-    public Vector3 handPositionOffset = new Vector3(0.5f, -0.3f, 0.5f);
-    public Vector3 handRotationOffset = new Vector3(0f, -90f, 0f);
+    [Header("Right Arm Position")]
+    public Vector3 rightArmPositionOffset = new Vector3(0.3f, -0.2f, 0.4f);
+    public Vector3 rightArmRotationOffset = new Vector3(0f, 0f, 0f);
+
+    [Header("Left Arm Position (Sprint Only)")]
+    public Vector3 leftArmPositionOffset = new Vector3(-0.3f, -0.15f, 0.4f);
+    public Vector3 leftArmRotationOffset = new Vector3(0f, 0f, 0f);
+
+    [Header("Weapon Position")]
+    public Vector3 weaponPositionOffset = new Vector3(0.5f, -0.3f, 0.5f);
+    public Vector3 weaponRotationOffset = new Vector3(0f, -90f, 0f);
 
     [Header("Weapon Sway")]
     public float swayAmount = 0.02f;
@@ -21,6 +31,14 @@ public class WeaponController : MonoBehaviour
     public float bobAmount = 0.05f;
     public float bobAmountVertical = 0.03f;
 
+    [Header("Sprint")]
+    public KeyCode sprintKey = KeyCode.LeftShift;
+    public Vector3 rightArmSprintOffset = new Vector3(0.2f, -0.3f, 0.3f);
+    public Vector3 weaponSprintOffset = new Vector3(0.2f, -0.2f, 0.3f);
+    public Vector3 weaponSprintRotation = new Vector3(-10f, -80f, -5f);
+    public float sprintBobMultiplier = 1.8f;
+    public float sprintTransitionSpeed = 8f;
+
     [Header("Crouch")]
     public Vector3 crouchOffset = new Vector3(0.1f, -0.1f, 0.05f);
     public float crouchRotation = 5f;
@@ -31,46 +49,86 @@ public class WeaponController : MonoBehaviour
     public float landRotation = 15f;
     public float jumpTransitionSpeed = 10f;
 
-    private Vector3 initialPosition;
-    private Quaternion initialRotation;
-    private Vector3 swayPos;
-    private Vector3 swayRot;
+    // Variables pour le bras droit
+    private Vector3 rightArmInitialPos;
+    private Quaternion rightArmInitialRot;
+    private Vector3 rightArmSwayPos;
+    private Vector3 rightArmTargetOffset;
+
+    // Variables pour le bras gauche
+    private Vector3 leftArmInitialPos;
+    private Quaternion leftArmInitialRot;
+    private float leftArmAlpha = 0f;
+
+    // Variables pour l'arme
+    private Vector3 weaponInitialPos;
+    private Quaternion weaponInitialRot;
+    private Vector3 weaponSwayPos;
+    private Vector3 weaponSwayRot;
+    private Vector3 weaponTargetOffset;
+    private Vector3 weaponTargetRotation;
+
+    // Variables communes
     private float bobTimer;
     private bool wasGrounded;
     private float landingTimer;
-    private Vector3 targetOffset;
-    private float targetRotationZ;
+    private bool isSprinting;
 
     void Start()
     {
-        if (handTransform == null)
-            handTransform = transform;
-
         if (cameraTransform == null)
             cameraTransform = Camera.main.transform;
 
-        SetupHandPosition();
-
-        initialPosition = handTransform.localPosition;
-        initialRotation = handTransform.localRotation;
+        SetupArms();
         wasGrounded = true;
     }
 
-    void SetupHandPosition()
+    void SetupArms()
     {
-        // Positionner la main comme enfant de la caméra si ce n'est pas déjà fait
-        if (handTransform.parent != cameraTransform)
+        // Setup bras droit
+        if (rightArmTransform != null)
         {
-            handTransform.SetParent(cameraTransform);
+            if (rightArmTransform.parent != cameraTransform)
+                rightArmTransform.SetParent(cameraTransform);
+
+            rightArmTransform.localPosition = rightArmPositionOffset;
+            rightArmTransform.localRotation = Quaternion.Euler(rightArmRotationOffset);
+            rightArmTransform.localScale = Vector3.one;
+            rightArmInitialPos = rightArmTransform.localPosition;
+            rightArmInitialRot = rightArmTransform.localRotation;
         }
 
-        // Appliquer la position et rotation initiale
-        handTransform.localPosition = handPositionOffset;
-        handTransform.localRotation = Quaternion.Euler(handRotationOffset);
+        // Setup bras gauche
+        if (leftArmTransform != null)
+        {
+            if (leftArmTransform.parent != cameraTransform)
+                leftArmTransform.SetParent(cameraTransform);
+
+            leftArmTransform.localPosition = leftArmPositionOffset;
+            leftArmTransform.localRotation = Quaternion.Euler(leftArmRotationOffset);
+            leftArmTransform.localScale = Vector3.one;
+            leftArmInitialPos = leftArmTransform.localPosition;
+            leftArmInitialRot = leftArmTransform.localRotation;
+            leftArmTransform.gameObject.SetActive(false);
+        }
+
+        // Setup arme
+        if (weaponTransform != null)
+        {
+            if (weaponTransform.parent != cameraTransform)
+                weaponTransform.SetParent(cameraTransform);
+
+            weaponTransform.localPosition = weaponPositionOffset;
+            weaponTransform.localRotation = Quaternion.Euler(weaponRotationOffset);
+            weaponTransform.localScale = Vector3.one;
+            weaponInitialPos = weaponTransform.localPosition;
+            weaponInitialRot = weaponTransform.localRotation;
+        }
     }
 
-    void Update()
+    void LateUpdate()
     {
+        HandleSprint();
         HandleSway();
         HandleBob();
         HandleCrouch();
@@ -78,28 +136,61 @@ public class WeaponController : MonoBehaviour
         ApplyMovements();
     }
 
+    void HandleSprint()
+    {
+        float vertical = Input.GetAxis("Vertical");
+        bool wantsToSprint = Input.GetKey(sprintKey) && vertical > 0.1f &&
+                            playerMovement != null && playerMovement.IsGrounded() &&
+                            !playerMovement.IsCrouching();
+
+        isSprinting = wantsToSprint;
+
+        if (isSprinting)
+        {
+            // Offsets pour le sprint
+            rightArmTargetOffset = Vector3.Lerp(rightArmTargetOffset, rightArmSprintOffset, Time.deltaTime * sprintTransitionSpeed);
+            weaponTargetOffset = Vector3.Lerp(weaponTargetOffset, weaponSprintOffset, Time.deltaTime * sprintTransitionSpeed);
+            weaponTargetRotation = Vector3.Lerp(weaponTargetRotation, weaponSprintRotation, Time.deltaTime * sprintTransitionSpeed);
+        }
+        else if (playerMovement != null && !playerMovement.IsCrouching())
+        {
+            rightArmTargetOffset = Vector3.Lerp(rightArmTargetOffset, Vector3.zero, Time.deltaTime * sprintTransitionSpeed);
+            weaponTargetOffset = Vector3.Lerp(weaponTargetOffset, Vector3.zero, Time.deltaTime * sprintTransitionSpeed);
+            weaponTargetRotation = Vector3.Lerp(weaponTargetRotation, Vector3.zero, Time.deltaTime * sprintTransitionSpeed);
+        }
+    }
+
     void HandleSway()
     {
-        // Récupérer le mouvement de la souris
+        if (isSprinting)
+        {
+            // Réinitialiser le sway en sprint
+            rightArmSwayPos = Vector3.Lerp(rightArmSwayPos, Vector3.zero, Time.deltaTime * swaySmooth);
+            weaponSwayPos = Vector3.Lerp(weaponSwayPos, Vector3.zero, Time.deltaTime * swaySmooth);
+            weaponSwayRot = Vector3.Lerp(weaponSwayRot, Vector3.zero, Time.deltaTime * swaySmooth);
+            return;
+        }
+
         float mouseX = Input.GetAxis("Mouse X");
         float mouseY = Input.GetAxis("Mouse Y");
 
-        // Calculer le sway cible
         float targetSwayX = Mathf.Clamp(-mouseX * swayAmount, -maxSwayAmount, maxSwayAmount);
         float targetSwayY = Mathf.Clamp(-mouseY * swayAmount, -maxSwayAmount, maxSwayAmount);
 
-        // Appliquer le sway avec smoothing
-        swayPos.x = Mathf.Lerp(swayPos.x, targetSwayX, Time.deltaTime * swaySmooth);
-        swayPos.y = Mathf.Lerp(swayPos.y, targetSwayY, Time.deltaTime * swaySmooth);
+        // Appliquer au bras droit
+        rightArmSwayPos.x = Mathf.Lerp(rightArmSwayPos.x, targetSwayX, Time.deltaTime * swaySmooth);
+        rightArmSwayPos.y = Mathf.Lerp(rightArmSwayPos.y, targetSwayY, Time.deltaTime * swaySmooth);
 
-        // Rotation du sway
-        swayRot.y = Mathf.Lerp(swayRot.y, -mouseX * swayAmount * 100, Time.deltaTime * swaySmooth);
-        swayRot.x = Mathf.Lerp(swayRot.x, mouseY * swayAmount * 100, Time.deltaTime * swaySmooth);
+        // Appliquer à l'arme
+        weaponSwayPos.x = Mathf.Lerp(weaponSwayPos.x, targetSwayX, Time.deltaTime * swaySmooth);
+        weaponSwayPos.y = Mathf.Lerp(weaponSwayPos.y, targetSwayY, Time.deltaTime * swaySmooth);
+
+        weaponSwayRot.y = Mathf.Lerp(weaponSwayRot.y, -mouseX * swayAmount * 100, Time.deltaTime * swaySmooth);
+        weaponSwayRot.x = Mathf.Lerp(weaponSwayRot.x, mouseY * swayAmount * 100, Time.deltaTime * swaySmooth);
     }
 
     void HandleBob()
     {
-        // Vérifier si le joueur bouge
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
         bool isMoving = (Mathf.Abs(horizontal) > 0.1f || Mathf.Abs(vertical) > 0.1f);
@@ -107,35 +198,40 @@ public class WeaponController : MonoBehaviour
         if (isMoving && playerMovement != null && playerMovement.IsGrounded())
         {
             float speedMultiplier = playerMovement.IsCrouching() ? 0.5f : 1f;
+            if (isSprinting) speedMultiplier = sprintBobMultiplier;
 
-            // Incrémenter le timer
             bobTimer += Time.deltaTime * bobSpeed * speedMultiplier;
 
-            // Calculer le bob
-            float bobX = Mathf.Cos(bobTimer) * bobAmount;
-            float bobY = Mathf.Sin(bobTimer * 2) * bobAmountVertical;
+            float bobX = Mathf.Cos(bobTimer) * bobAmount * (isSprinting ? 1.5f : 1f);
+            float bobY = Mathf.Sin(bobTimer * 2) * bobAmountVertical * (isSprinting ? 2f : 1f);
 
-            swayPos.x += bobX;
-            swayPos.y += bobY;
+            rightArmSwayPos.x += bobX;
+            rightArmSwayPos.y += bobY;
+
+            weaponSwayPos.x += bobX;
+            weaponSwayPos.y += bobY;
         }
         else
         {
-            // Réinitialiser progressivement
             bobTimer = 0;
         }
     }
 
     void HandleCrouch()
     {
+        if (isSprinting) return;
+
         if (playerMovement != null && playerMovement.IsCrouching())
         {
-            targetOffset = Vector3.Lerp(targetOffset, crouchOffset, Time.deltaTime * crouchTransitionSpeed);
-            targetRotationZ = Mathf.Lerp(targetRotationZ, crouchRotation, Time.deltaTime * crouchTransitionSpeed);
+            rightArmTargetOffset = Vector3.Lerp(rightArmTargetOffset, crouchOffset, Time.deltaTime * crouchTransitionSpeed);
+            weaponTargetOffset = Vector3.Lerp(weaponTargetOffset, crouchOffset, Time.deltaTime * crouchTransitionSpeed);
+            weaponTargetRotation.z = Mathf.Lerp(weaponTargetRotation.z, crouchRotation, Time.deltaTime * crouchTransitionSpeed);
         }
         else
         {
-            targetOffset = Vector3.Lerp(targetOffset, Vector3.zero, Time.deltaTime * crouchTransitionSpeed);
-            targetRotationZ = Mathf.Lerp(targetRotationZ, 0, Time.deltaTime * crouchTransitionSpeed);
+            rightArmTargetOffset = Vector3.Lerp(rightArmTargetOffset, Vector3.zero, Time.deltaTime * crouchTransitionSpeed);
+            weaponTargetOffset = Vector3.Lerp(weaponTargetOffset, Vector3.zero, Time.deltaTime * crouchTransitionSpeed);
+            weaponTargetRotation.z = Mathf.Lerp(weaponTargetRotation.z, 0, Time.deltaTime * crouchTransitionSpeed);
         }
     }
 
@@ -145,24 +241,21 @@ public class WeaponController : MonoBehaviour
 
         bool isGrounded = playerMovement.IsGrounded();
 
-        // Détection du saut
         if (wasGrounded && !isGrounded)
         {
             landingTimer = 0;
-            swayRot.x += jumpRotation;
+            weaponSwayRot.x += jumpRotation;
         }
 
-        // Détection de l'atterrissage
         if (!wasGrounded && isGrounded)
         {
             landingTimer = 1f;
         }
 
-        // Animation d'atterrissage
         if (landingTimer > 0)
         {
             float landRotAmount = Mathf.Lerp(0, landRotation, landingTimer);
-            swayRot.x = Mathf.Lerp(swayRot.x, landRotAmount, Time.deltaTime * jumpTransitionSpeed);
+            weaponSwayRot.x = Mathf.Lerp(weaponSwayRot.x, landRotAmount, Time.deltaTime * jumpTransitionSpeed);
             landingTimer -= Time.deltaTime * 2f;
         }
 
@@ -171,13 +264,49 @@ public class WeaponController : MonoBehaviour
 
     void ApplyMovements()
     {
-        // Combiner toutes les positions et rotations
-        Vector3 finalPosition = initialPosition + swayPos + targetOffset;
-        Quaternion swayRotation = Quaternion.Euler(swayRot.x, swayRot.y, swayRot.z + targetRotationZ);
-        Quaternion finalRotation = initialRotation * swayRotation;
+        // Appliquer au bras droit
+        if (rightArmTransform != null)
+        {
+            rightArmTransform.localScale = Vector3.one;
+            Vector3 rightArmFinalPos = rightArmInitialPos + rightArmSwayPos + rightArmTargetOffset;
+            rightArmTransform.localPosition = rightArmFinalPos;
+            rightArmTransform.localRotation = rightArmInitialRot;
+        }
 
-        // Appliquer à la main
-        handTransform.localPosition = finalPosition;
-        handTransform.localRotation = finalRotation;
+        // Appliquer au bras gauche (sprint uniquement)
+        if (leftArmTransform != null)
+        {
+            if (isSprinting)
+            {
+                leftArmAlpha = Mathf.Lerp(leftArmAlpha, 1f, Time.deltaTime * 10f);
+                if (!leftArmTransform.gameObject.activeSelf)
+                    leftArmTransform.gameObject.SetActive(true);
+
+                // Animation de balancement
+                float handBob = Mathf.Sin(bobTimer * 2) * 0.08f;
+                Vector3 leftArmPos = leftArmInitialPos;
+                leftArmPos.y += handBob;
+                leftArmTransform.localPosition = Vector3.Lerp(leftArmTransform.localPosition, leftArmPos, Time.deltaTime * 10f);
+            }
+            else
+            {
+                leftArmAlpha = Mathf.Lerp(leftArmAlpha, 0f, Time.deltaTime * 10f);
+                if (leftArmAlpha < 0.01f && leftArmTransform.gameObject.activeSelf)
+                    leftArmTransform.gameObject.SetActive(false);
+            }
+        }
+
+        // Appliquer à l'arme
+        if (weaponTransform != null)
+        {
+            weaponTransform.localScale = Vector3.one;
+            Vector3 weaponFinalPos = weaponInitialPos + weaponSwayPos + weaponTargetOffset;
+            Quaternion additionalRot = Quaternion.Euler(weaponTargetRotation);
+            Quaternion swayRot = Quaternion.Euler(weaponSwayRot);
+            Quaternion weaponFinalRot = weaponInitialRot * additionalRot * swayRot;
+
+            weaponTransform.localPosition = weaponFinalPos;
+            weaponTransform.localRotation = weaponFinalRot;
+        }
     }
 }

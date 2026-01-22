@@ -4,9 +4,13 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     public float walkSpeed = 6f;
+    public float sprintSpeed = 10f;
     public float crouchSpeed = 3f;
     public float jumpHeight = 1.5f;
     public float gravity = -20f;
+
+    [Header("Sprint")]
+    public KeyCode sprintKey = KeyCode.LeftShift;
 
     [Header("Crouch")]
     public float standingHeight = 2f;
@@ -22,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     private CharacterController controller;
     private Vector3 velocity;
     private bool isCrouching;
+    private bool isSprinting;
     private float currentHeight;
     private float targetHeight;
     private float currentCameraHeight;
@@ -49,7 +54,11 @@ public class PlayerMovement : MonoBehaviour
     {
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
-        float speed = isCrouching ? crouchSpeed : walkSpeed;
+
+        // Gérer le sprint (Shift + avancer, pas en crouch)
+        isSprinting = Input.GetKey(sprintKey) && z > 0.1f && !isCrouching && controller.isGrounded;
+
+        float speed = isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
         Vector3 move = transform.right * x + transform.forward * z;
 
         if (controller.isGrounded && velocity.y < 0)
@@ -145,8 +154,13 @@ public class PlayerMovement : MonoBehaviour
         return isCrouching;
     }
 
+    public bool IsSprinting()
+    {
+        return isSprinting;
+    }
+
     public float GetCurrentSpeed()
     {
-        return isCrouching ? crouchSpeed : walkSpeed;
+        return isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
     }
 }
