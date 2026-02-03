@@ -10,6 +10,9 @@ public class Bullet : MonoBehaviour
     [SerializeField] private float pickupRadius = 1.5f;
     [SerializeField] private LayerMask playerLayer;
 
+    [Header("Visuals")]
+    [SerializeField] private float bulletScale = 1f;
+
     private Rigidbody rb;
     private bool hasHit = false;
     private WeaponController weaponController;
@@ -23,6 +26,7 @@ public class Bullet : MonoBehaviour
         {
             rb.linearVelocity = transform.forward * launchForce;
         }
+        transform.localScale = Vector3.one * bulletScale;
     }
 
     void Update()

@@ -163,4 +163,9 @@ public class PlayerMovement : MonoBehaviour
     {
         return isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
     }
+
+    public float GetCurrentCameraHeight()
+    {
+        return currentCameraHeight;
+    }
 }

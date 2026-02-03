@@ -127,15 +127,9 @@ public class WeaponController : MonoBehaviour
             handTransform.rotation * Quaternion.Euler(rotationOffset);
     }
 
-    void OnGUI()
+    public int GetCurrentBullets()
     {
-
-
-        GUI.Label(
-    new Rect(10, 50, 200, 30),
-    "Balles: " + currentBullets + "/" + maxBullets +
-    " | Arme: " + gameObject.name
-);
-
+        return currentBullets;
     }
+
 }
