@@ -31,10 +31,12 @@ public class PlayerMovement : MonoBehaviour
     private float targetHeight;
     private float currentCameraHeight;
     private float targetCameraHeight;
+    private StaminaSystem staminaSystem;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        staminaSystem = GetComponent<StaminaSystem>();
         currentHeight = standingHeight;
         targetHeight = standingHeight;
         controller.height = standingHeight;
@@ -56,7 +58,8 @@ public class PlayerMovement : MonoBehaviour
         float z = Input.GetAxis("Vertical");
 
         // Gérer le sprint (Shift + avancer, pas en crouch)
-        isSprinting = Input.GetKey(sprintKey) && z > 0.1f && !isCrouching && controller.isGrounded;
+        bool hasStamina = staminaSystem == null || staminaSystem.HasStamina();
+        isSprinting = Input.GetKey(sprintKey) && z > 0.1f && !isCrouching && controller.isGrounded && hasStamina;
 
         float speed = isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
         Vector3 move = transform.right * x + transform.forward * z;
@@ -86,7 +89,8 @@ public class PlayerMovement : MonoBehaviour
     void HandleCrouch()
     {
         // Définir la hauteur cible
-        if (Input.GetKey(KeyCode.LeftControl))
+        bool hasStamina = staminaSystem == null || staminaSystem.HasStamina();
+        if (Input.GetKey(KeyCode.LeftControl) && hasStamina)
         {
             targetHeight = crouchHeight;
             targetCameraHeight = crouchCameraHeight;
