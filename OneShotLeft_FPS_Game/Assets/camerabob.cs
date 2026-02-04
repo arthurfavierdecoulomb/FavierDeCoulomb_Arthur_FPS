@@ -24,6 +24,15 @@ public class CameraBob : MonoBehaviour
     private float targetBobAmount = 0f;
     private float targetBobSpeed = 0f;
 
+    [Header("Camera Shake Smooth")]
+    [SerializeField] private float shakeFrequency = 25f;
+
+    private float shakeTimeRemaining;
+    private float shakeTotalDuration;
+    private float shakeStartIntensity;
+
+
+
     void Start()
     {
         playerMovement = GetComponentInParent<PlayerMovement>();
@@ -52,25 +61,60 @@ public class CameraBob : MonoBehaviour
             targetBobSpeed = walkBobSpeed;
         }
 
-        // --- Transition fluide vers la cible ---
+        // --- Transition fluide ---
         currentBobAmount = Mathf.Lerp(currentBobAmount, targetBobAmount, Time.deltaTime * bobTransitionSpeed);
         currentBobSpeed = Mathf.Lerp(currentBobSpeed, targetBobSpeed, Time.deltaTime * bobTransitionSpeed);
 
-        // --- Calcul du bob sinusoïdal ---
         if (currentBobAmount > 0.001f)
             bobTimer += Time.deltaTime * currentBobSpeed;
 
         float bobOffset = Mathf.Sin(bobTimer) * currentBobAmount;
 
-        // --- Calcul de la respiration (toujours active) ---
+        // --- Respiration ---
         float breathOffset = Mathf.Sin(Time.time * breathSpeed * Mathf.PI * 2f) * breathAmount;
 
-        // --- Récupère la base Y depuis PlayerMovement (gère le crouch) ---
         float baseY = playerMovement.GetCurrentCameraHeight();
 
-        // --- Applique bob + respiration sur le Y de la caméra ---
+        // =========================
+        // CAMERA SHAKE (SMOOTH)
+        // =========================
+        Vector3 shakeOffset = Vector3.zero;
+
+        if (shakeTimeRemaining > 0f)
+        {
+            shakeTimeRemaining -= Time.deltaTime;
+
+            float normalizedTime = 1f - (shakeTimeRemaining / shakeTotalDuration);
+
+            float currentIntensity = Mathf.Lerp(
+                shakeStartIntensity,
+                0f,
+                Mathf.SmoothStep(0f, 1f, normalizedTime)
+            );
+
+            float shakeX = Mathf.PerlinNoise(Time.time * shakeFrequency, 0f) * 2f - 1f;
+            float shakeY = Mathf.PerlinNoise(0f, Time.time * shakeFrequency) * 2f - 1f;
+
+            shakeOffset = new Vector3(shakeX, shakeY, 0f) * currentIntensity;
+        }
+
+        // =========================
+        // APPLICATION CAMERA
+        // =========================
         Vector3 camPos = transform.localPosition;
-        camPos.y = baseY + bobOffset + breathOffset;
+        camPos.y = baseY + bobOffset + breathOffset + shakeOffset.y;
+        camPos.x = shakeOffset.x;
         transform.localPosition = camPos;
     }
+
+
+    public void Shake(float duration, float intensity)
+    {
+        shakeTotalDuration = duration;
+        shakeTimeRemaining = duration;
+        shakeStartIntensity = intensity;
+    }
+
+
+
 }
