@@ -14,6 +14,9 @@ public class StaminaSystem : MonoBehaviour
     [SerializeField] private float regenRate = 5f;       // Par seconde quand inactif
     [SerializeField] private float regenDelay = 1f;      // Délai avant de commencer à régénérer
 
+    [Header("Minimum Stamina")]
+    [SerializeField] private float minStaminaPercent = 5f; // Pourcentage minimum pour utiliser stamina
+
     private PlayerMovement playerMovement;
     private float timeSinceLastUse = 0f;
 
@@ -45,7 +48,6 @@ public class StaminaSystem : MonoBehaviour
         {
             // Régénération après le délai
             timeSinceLastUse += Time.deltaTime;
-
             if (timeSinceLastUse >= regenDelay && currentStamina < maxStamina)
             {
                 currentStamina += regenRate * Time.deltaTime;
@@ -70,5 +72,25 @@ public class StaminaSystem : MonoBehaviour
     public bool HasStamina()
     {
         return currentStamina > 0;
+    }
+
+    // Vérifie si le joueur a assez de stamina pour sprinter
+    public bool CanSprint()
+    {
+        float staminaPercent = (currentStamina / maxStamina) * 100f;
+        return staminaPercent >= minStaminaPercent;
+    }
+
+    // Vérifie si le joueur a assez de stamina pour s'accroupir
+    public bool CanCrouch()
+    {
+        float staminaPercent = (currentStamina / maxStamina) * 100f;
+        return staminaPercent >= minStaminaPercent;
+    }
+
+    // Retourne le pourcentage de stamina
+    public float GetStaminaPercent()
+    {
+        return (currentStamina / maxStamina) * 100f;
     }
 }

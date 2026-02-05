@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 46776094}
   - component: {fileID: 46776097}
   - component: {fileID: 46776096}
-  - component: {fileID: 46776095}
+  - component: {fileID: 46776098}
   m_Layer: 5
   m_Name: life
   m_TagString: Untagged
@@ -157,23 +157,6 @@ RectTransform:
   m_AnchoredPosition: {x: -283.4, y: -63.6}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &46776095
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 46776093}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 264053d4cd1093b40882b2fe57f221ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AmmoUI
-  ammoText: {fileID: 46776096}
-  weaponController: {fileID: 188950718}
-  normalColor: {r: 1, g: 1, b: 1, a: 1}
-  emptyColor: {r: 1, g: 0, b: 0, a: 1}
-  flashSpeed: 5
 --- !u!114 &46776096
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,7 +210,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -273,6 +256,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 46776093}
   m_CullTransparentMesh: 1
+--- !u!114 &46776098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46776093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 418b0c631c86b10488c38ab8bedf6e6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealthUI
+  healthText: {fileID: 46776096}
+  playerHealth: {fileID: 1387186518}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
+  flashSpeed: 5
+  lowHealthThreshold: 20
+  shakeIntensity: 10
+  shakeDuration: 0.2
 --- !u!1 &59689931
 GameObject:
   m_ObjectHideFlags: 0
@@ -474,7 +477,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -1036,6 +1039,7 @@ MonoBehaviour:
   breathAmount: 0.015
   breathSpeed: 0.5
   bobTransitionSpeed: 5
+  shakeFrequency: 100
 --- !u!1 &391084048
 GameObject:
   m_ObjectHideFlags: 0
@@ -1396,7 +1400,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -1459,6 +1463,8 @@ MonoBehaviour:
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   emptyColor: {r: 1, g: 0, b: 0, a: 1}
   flashSpeed: 5
+  shakeIntensity: 10
+  shakeDuration: 0.2
 --- !u!1 &498883431
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,7 +1737,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -2510,6 +2516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterWarning
   warningText: {fileID: 998654935}
   weaponController: {fileID: 188950718}
+  staminaSystem: {fileID: 0}
   emptyMessages:
   - Ah... je n'ai plus de balle
   - Je vais crever...Je vais crever...Je vais crever...
@@ -2527,10 +2534,24 @@ MonoBehaviour:
   - "Ah tu es l\xE0 !"
   - OUAIIIIIS ! pardon.
   - Qu'est ce que je ferais sans toi...
+  fatigueMessages:
+  - Je ne peux faire cela...
+  - J'ai besoin d'une pause...
+  - Je ne me sens pas capable...
+  - "Je suis fatigu\xE9..."
+  - "Ouf...ouf... mes poumons vont l\xE2cher..."
+  - "Trop... \xE9puis\xE9..."
+  - Je dois reprendre mon souffle...
+  - "Mes jambes ne r\xE9pondent plus..."
+  - Laissez-moi respirer...
+  - Je n'en peux plus...
   typingSpeed: 0.02
   emptyColor: {r: 1, g: 1, b: 1, a: 1}
   reloadColor: {r: 1, g: 1, b: 1, a: 1}
+  fatigueColor: {r: 1, g: 0.5, b: 0, a: 1}
   messageDuration: 3
+  staminaThreshold: 5
+  fatigueCooldown: 2
 --- !u!114 &998654935
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2584,7 +2605,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 8192
   m_textAlignment: 65535
@@ -3450,7 +3471,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -3729,7 +3750,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -3792,6 +3813,8 @@ MonoBehaviour:
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   emptyColor: {r: 1, g: 0, b: 0, a: 1}
   flashSpeed: 5
+  shakeIntensity: 5
+  shakeDuration: 0.1
 --- !u!1 &1365445600 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -7755582036241254283, guid: aa4b3caef0890a9438b1edefea7860c4, type: 3}
@@ -3833,6 +3856,7 @@ GameObject:
   - component: {fileID: 1387186511}
   - component: {fileID: 1387186517}
   - component: {fileID: 1387186516}
+  - component: {fileID: 1387186518}
   m_Layer: 3
   m_Name: chara
   m_TagString: Player
@@ -4001,6 +4025,23 @@ MonoBehaviour:
   crouchCost: 2
   regenRate: 5
   regenDelay: 1
+  minStaminaPercent: 5
+--- !u!114 &1387186518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1387186510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ffcfb56aa5018042aa346948a023fe5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  cameraBob: {fileID: 330585549}
+  shakeDuration: 0.15
+  shakeIntensity: 0.15
 --- !u!1001 &1478447073
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4897,7 +4938,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535

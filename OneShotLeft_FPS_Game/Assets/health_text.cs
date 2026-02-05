@@ -1,16 +1,17 @@
 using UnityEngine;
 using TMPro;
 
-public class StaminaUI : MonoBehaviour
+public class HealthUI : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private TextMeshProUGUI staminaText;
-    [SerializeField] private StaminaSystem staminaSystem;
+    [SerializeField] private TextMeshProUGUI healthText;
+    [SerializeField] private PlayerHealth playerHealth;
 
     [Header("Flash Settings")]
     [SerializeField] private Color normalColor = Color.white;
-    [SerializeField] private Color emptyColor = Color.red;
+    [SerializeField] private Color lowHealthColor = Color.red;
     [SerializeField] private float flashSpeed = 5f;
+    [SerializeField] private int lowHealthThreshold = 20;
 
     [Header("Shake Settings")]
     [SerializeField] private float shakeIntensity = 10f;
@@ -18,7 +19,7 @@ public class StaminaUI : MonoBehaviour
 
     private bool isFlashing = false;
     private float flashTimer = 0f;
-    private float previousStamina;
+    private int previousHealth;
 
     // Pour le tremblement
     private Vector3 originalPosition;
@@ -27,47 +28,46 @@ public class StaminaUI : MonoBehaviour
 
     void Start()
     {
-        if (staminaSystem != null)
+        if (playerHealth != null)
         {
-            previousStamina = staminaSystem.GetCurrentStamina();
+            previousHealth = playerHealth.GetHealth();
         }
 
         // Sauvegarde la position d'origine du texte
-        if (staminaText != null)
+        if (healthText != null)
         {
-            originalPosition = staminaText.transform.localPosition;
+            originalPosition = healthText.transform.localPosition;
         }
     }
 
     void Update()
     {
-        if (staminaText == null || staminaSystem == null) return;
+        if (healthText == null || playerHealth == null) return;
 
-        float currentStamina = staminaSystem.GetCurrentStamina();
+        int currentHealth = playerHealth.GetHealth();
 
-        // Détecte la perte de stamina
-        if (currentStamina < previousStamina)
+        // Détecte la perte de vie
+        if (currentHealth < previousHealth)
         {
             TriggerShake();
         }
-        previousStamina = currentStamina;
+        previousHealth = currentHealth;
 
-        // Affiche la stamina avec formatage à 3 chiffres (max 100)
-        int staminaValue = Mathf.RoundToInt(currentStamina);
-        staminaValue = Mathf.Clamp(staminaValue, 0, 100); // Limite à 100 max
-        staminaText.text = staminaValue.ToString("D3"); // D3 = 3 chiffres avec zéros
+        // Affiche la vie avec formatage à 3 chiffres (000 à 100)
+        int healthValue = Mathf.Clamp(currentHealth, 0, 100);
+        healthText.text = healthValue.ToString("D3"); // D3 = 3 chiffres avec zéros
 
-        // Gestion du flash
-        if (currentStamina <= 20)
+        // Gestion du flash quand la vie est basse
+        if (currentHealth <= lowHealthThreshold)
         {
             isFlashing = true;
             flashTimer += Time.deltaTime * flashSpeed;
-            staminaText.color = Color.Lerp(normalColor, emptyColor, Mathf.PingPong(flashTimer, 1f));
+            healthText.color = Color.Lerp(normalColor, lowHealthColor, Mathf.PingPong(flashTimer, 1f));
         }
         else
         {
             isFlashing = false;
-            staminaText.color = normalColor;
+            healthText.color = normalColor;
         }
 
         // Gestion du tremblement
@@ -83,13 +83,13 @@ public class StaminaUI : MonoBehaviour
                     Random.Range(-shakeIntensity, shakeIntensity),
                     0f
                 );
-                staminaText.transform.localPosition = originalPosition + shakeOffset;
+                healthText.transform.localPosition = originalPosition + shakeOffset;
             }
             else
             {
                 // Fin du tremblement
                 isShaking = false;
-                staminaText.transform.localPosition = originalPosition;
+                healthText.transform.localPosition = originalPosition;
             }
         }
     }
