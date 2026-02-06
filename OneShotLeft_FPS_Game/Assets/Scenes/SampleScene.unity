@@ -2516,7 +2516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterWarning
   warningText: {fileID: 998654935}
   weaponController: {fileID: 188950718}
-  staminaSystem: {fileID: 0}
+  staminaSystem: {fileID: 1387186517}
   emptyMessages:
   - Ah... je n'ai plus de balle
   - Je vais crever...Je vais crever...Je vais crever...
@@ -2548,7 +2548,7 @@ MonoBehaviour:
   typingSpeed: 0.02
   emptyColor: {r: 1, g: 1, b: 1, a: 1}
   reloadColor: {r: 1, g: 1, b: 1, a: 1}
-  fatigueColor: {r: 1, g: 0.5, b: 0, a: 1}
+  fatigueColor: {r: 1, g: 1, b: 1, a: 1}
   messageDuration: 3
   staminaThreshold: 5
   fatigueCooldown: 2

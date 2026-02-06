@@ -58,8 +58,8 @@ public class PlayerMovement : MonoBehaviour
         float z = Input.GetAxis("Vertical");
 
         // Gérer le sprint (Shift + avancer, pas en crouch)
-        bool hasStamina = staminaSystem == null || staminaSystem.HasStamina();
-        isSprinting = Input.GetKey(sprintKey) && z > 0.1f && !isCrouching && controller.isGrounded && hasStamina;
+        bool canSprint = staminaSystem == null || staminaSystem.CanSprint();
+        isSprinting = Input.GetKey(sprintKey) && z > 0.1f && !isCrouching && controller.isGrounded && canSprint;
 
         float speed = isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
         Vector3 move = transform.right * x + transform.forward * z;
@@ -88,9 +88,11 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleCrouch()
     {
+        // Vérifier si le joueur a assez de stamina pour s'accroupir
+        bool canCrouch = staminaSystem == null || staminaSystem.CanCrouch();
+
         // Définir la hauteur cible
-        bool hasStamina = staminaSystem == null || staminaSystem.HasStamina();
-        if (Input.GetKey(KeyCode.LeftControl) && hasStamina)
+        if (Input.GetKey(KeyCode.LeftControl) && canCrouch)
         {
             targetHeight = crouchHeight;
             targetCameraHeight = crouchCameraHeight;
@@ -98,8 +100,16 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // Vérifier s'il y a de la place pour se lever
-            if (CanStandUp())
+            // Force le joueur à se relever si plus assez de stamina
+            if (isCrouching && !canCrouch)
+            {
+                // Force le relevé même sous un plafond
+                targetHeight = standingHeight;
+                targetCameraHeight = standingCameraHeight;
+                isCrouching = false;
+            }
+            // Sinon vérifie s'il y a de la place pour se lever normalement
+            else if (CanStandUp())
             {
                 targetHeight = standingHeight;
                 targetCameraHeight = standingCameraHeight;
