@@ -29,6 +29,14 @@ public class ArmFollowCamera : MonoBehaviour
             cameraTransform = Camera.main.transform;
     }
 
+    void Update()
+    {
+        // Bloque le tir si le curseur est visible (écran de mort, menu, etc.)
+        if (Cursor.lockState != CursorLockMode.Locked) return;
+
+    }
+
+    
     void LateUpdate()
     {
         if (cameraTransform == null || playerMovement == null) return;

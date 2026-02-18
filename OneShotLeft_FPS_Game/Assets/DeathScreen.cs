@@ -11,24 +11,28 @@ public class DeathScreen : MonoBehaviour
     public TextMeshProUGUI mainTitleText;
     public TextMeshProUGUI motivationalText;
     public Button respawnButton;
+    public Button quitButton;
 
     [Header("Game UI to Hide")]
-    public GameObject gameUIPanel; // Ton UI de vie/stamina à cacher
+    public GameObject gameUIPanel;
 
     [Header("Player Reference")]
     private PlayerHealth playerHealth;
 
     [Header("Animation Settings")]
-    [SerializeField] private float titleShakeDuration = 0.4f; // Très court !
-    [SerializeField] private float titleShakeIntensity = 15f; // Gros tremblement !
-    [SerializeField] private float slideDuration = 0.7f; // Slide smooth
-    [SerializeField] private float slideDistance = 200f; // Distance du slide depuis le bas
-    [SerializeField] private float typewriterSpeed = 0.03f; // Vitesse de la machine à écrire (secondes par lettre)
+    [SerializeField] private float titleShakeDuration = 0.4f;
+    [SerializeField] private float titleShakeIntensity = 15f;
+    [SerializeField] private float slideDuration = 0.7f;
+    [SerializeField] private float slideDistance = 200f;
+    [SerializeField] private float typewriterSpeed = 0.03f;
 
     [Header("Final Positions (Y)")]
-    [SerializeField] private float titleFinalYPosition = 150f; // Position Y finale du titre (en haut)
-    [SerializeField] private float motivationalFinalYPosition = 0f; // Position Y finale du texte (milieu)
-    [SerializeField] private float buttonFinalYPosition = -100f; // Position Y finale du bouton (en bas du milieu)
+    [SerializeField] private float titleFinalYPosition = 150f;
+    [SerializeField] private float motivationalFinalYPosition = 0f;
+    [SerializeField] private float buttonFinalYPosition = -130f; // Position Y commune aux deux boutons
+
+    [Header("Boutons - Alignement horizontal")]
+    [SerializeField] private float buttonSpacing = 120f; // Distance entre les deux boutons sur l'axe X
 
     [Header("Messages aléatoires")]
     private string[] deathTitles = new string[]
@@ -125,69 +129,61 @@ public class DeathScreen : MonoBehaviour
 
     void Start()
     {
-        // Cache l'écran de mort au démarrage
         HideDeathScreen();
 
-        // Configure le bouton respawn
         if (respawnButton != null)
-        {
             respawnButton.onClick.AddListener(OnRespawnClicked);
-        }
 
-        // Trouve le joueur
+        if (quitButton != null)
+            quitButton.onClick.AddListener(OnQuitClicked);
+
         playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (playerHealth == null)
-        {
             Debug.LogWarning("PlayerHealth non trouvé dans la scène !");
-        }
     }
 
     public void ShowDeathScreen()
     {
         if (deathScreenPanel != null)
         {
-            // Réinitialise AVANT d'afficher
             ResetUIElements();
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
 
             deathScreenPanel.SetActive(true);
 
-            // Cache l'UI de jeu (vie, stamina, etc.)
             if (gameUIPanel != null)
-            {
                 gameUIPanel.SetActive(false);
-            }
 
-            // Définit le titre ALÉATOIRE
             if (mainTitleText != null)
             {
                 int randomTitleIndex = Random.Range(0, deathTitles.Length);
                 mainTitleText.text = deathTitles[randomTitleIndex];
-                mainTitleText.rectTransform.anchoredPosition = new Vector2(0, 0); // Centre
+                mainTitleText.rectTransform.anchoredPosition = new Vector2(0, 0);
             }
 
-            // Choisit un message motivationnel aléatoire
             if (motivationalText != null)
             {
                 int randomIndex = Random.Range(0, motivationalMessages.Length);
                 currentMessage = motivationalMessages[randomIndex];
-                motivationalText.text = ""; // Vide le texte pour la machine à écrire
-                motivationalText.gameObject.SetActive(false); // Cache au début
+                motivationalText.text = "";
+                motivationalText.gameObject.SetActive(false);
             }
 
-            // Cache le bouton au début
             if (respawnButton != null)
-            {
                 respawnButton.gameObject.SetActive(false);
-            }
 
-            // Lance les animations
+            if (quitButton != null)
+                quitButton.gameObject.SetActive(false);
+
             StartCoroutine(DeathScreenAnimation());
         }
     }
 
     private IEnumerator DeathScreenAnimation()
     {
-        // PHASE 1 : APPARITION BRUTALE avec GROS tremblement COURT du titre au centre
+        // PHASE 1 : Tremblement du titre
         if (mainTitleText != null)
         {
             float elapsed = 0f;
@@ -195,37 +191,30 @@ public class DeathScreen : MonoBehaviour
 
             while (elapsed < titleShakeDuration)
             {
-                // GROS tremblement aléatoire
                 float offsetX = Random.Range(-titleShakeIntensity, titleShakeIntensity);
                 float offsetY = Random.Range(-titleShakeIntensity, titleShakeIntensity);
-
                 mainTitleText.rectTransform.anchoredPosition = centerPosition + new Vector3(offsetX, offsetY, 0);
-
                 elapsed += Time.deltaTime;
                 yield return null;
             }
 
-            // Remet le titre exactement au centre, sans tremblement
             mainTitleText.rectTransform.anchoredPosition = centerPosition;
         }
 
-        // Petite pause dramatique
         yield return new WaitForSeconds(0.15f);
 
-        // PHASE 2 : Le titre glisse vers le haut (position finale)
+        // PHASE 2 : Titre glisse vers le haut
         if (mainTitleText != null)
         {
             float elapsed = 0f;
-            Vector3 startPos = new Vector2(0, 0); // Centre
-            Vector3 endPos = new Vector2(0, titleFinalYPosition); // Position en haut (configurable)
+            Vector3 startPos = new Vector2(0, 0);
+            Vector3 endPos = new Vector2(0, titleFinalYPosition);
 
             while (elapsed < slideDuration)
             {
                 elapsed += Time.deltaTime;
-                float t = elapsed / slideDuration;
-                // Courbe d'animation smooth (ease out cubic)
+                float t = Mathf.Clamp01(elapsed / slideDuration);
                 t = 1f - Mathf.Pow(1f - t, 3f);
-
                 mainTitleText.rectTransform.anchoredPosition = Vector3.Lerp(startPos, endPos, t);
                 yield return null;
             }
@@ -233,15 +222,13 @@ public class DeathScreen : MonoBehaviour
             mainTitleText.rectTransform.anchoredPosition = endPos;
         }
 
-        // Petite pause
         yield return new WaitForSeconds(0.1f);
 
-        // PHASE 3 : Texte motivationnel - SLIDE + MACHINE À ÉCRIRE
+        // PHASE 3 : Texte motivationnel - slide + machine à écrire
         if (motivationalText != null)
         {
             motivationalText.gameObject.SetActive(true);
 
-            // D'abord le slide
             float elapsed = 0f;
             Vector3 startPos = new Vector2(0, motivationalFinalYPosition - slideDistance);
             Vector3 endPos = new Vector2(0, motivationalFinalYPosition);
@@ -253,13 +240,11 @@ public class DeathScreen : MonoBehaviour
             while (elapsed < slideDuration)
             {
                 elapsed += Time.deltaTime;
-                float t = elapsed / slideDuration;
+                float t = Mathf.Clamp01(elapsed / slideDuration);
                 t = 1f - Mathf.Pow(1f - t, 3f);
-
                 motivationalText.rectTransform.anchoredPosition = Vector3.Lerp(startPos, endPos, t);
                 textColor.a = t;
                 motivationalText.color = textColor;
-
                 yield return null;
             }
 
@@ -267,7 +252,6 @@ public class DeathScreen : MonoBehaviour
             textColor.a = 1f;
             motivationalText.color = textColor;
 
-            // Puis l'effet machine à écrire
             motivationalText.text = "";
             for (int i = 0; i < currentMessage.Length; i++)
             {
@@ -276,39 +260,59 @@ public class DeathScreen : MonoBehaviour
             }
         }
 
-        // Petite pause après la fin de l'écriture
         yield return new WaitForSeconds(0.3f);
 
-        // PHASE 4 : Bouton - Apparaît APRÈS que le texte soit fini
+        // PHASE 4 : Les deux boutons apparaissent ENSEMBLE, côte à côte sur le même Y
+        if (respawnButton != null) respawnButton.gameObject.SetActive(true);
+        if (quitButton != null) quitButton.gameObject.SetActive(true);
+
+        // Respawn à gauche, Quitter à droite — même Y
+        Vector3 respawnEndPos = new Vector2(-buttonSpacing, buttonFinalYPosition);
+        Vector3 quitEndPos = new Vector2(buttonSpacing, buttonFinalYPosition);
+        Vector3 respawnStartPos = new Vector2(-buttonSpacing, buttonFinalYPosition - slideDistance);
+        Vector3 quitStartPos = new Vector2(buttonSpacing, buttonFinalYPosition - slideDistance);
+
+        CanvasGroup respawnCG = respawnButton != null
+            ? respawnButton.GetComponent<CanvasGroup>() ?? respawnButton.gameObject.AddComponent<CanvasGroup>()
+            : null;
+        CanvasGroup quitCG = quitButton != null
+            ? quitButton.GetComponent<CanvasGroup>() ?? quitButton.gameObject.AddComponent<CanvasGroup>()
+            : null;
+
+        if (respawnCG != null) respawnCG.alpha = 0f;
+        if (quitCG != null) quitCG.alpha = 0f;
+
+        float btnElapsed = 0f;
+        while (btnElapsed < slideDuration)
+        {
+            btnElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(btnElapsed / slideDuration);
+            t = 1f - Mathf.Pow(1f - t, 3f);
+
+            if (respawnButton != null)
+            {
+                respawnButton.GetComponent<RectTransform>().anchoredPosition = Vector3.Lerp(respawnStartPos, respawnEndPos, t);
+                if (respawnCG != null) respawnCG.alpha = t;
+            }
+            if (quitButton != null)
+            {
+                quitButton.GetComponent<RectTransform>().anchoredPosition = Vector3.Lerp(quitStartPos, quitEndPos, t);
+                if (quitCG != null) quitCG.alpha = t;
+            }
+
+            yield return null;
+        }
+
+        // Position finale exacte
         if (respawnButton != null)
         {
-            respawnButton.gameObject.SetActive(true);
-
-            float elapsed = 0f;
-            Vector3 startPos = new Vector2(0, buttonFinalYPosition - slideDistance);
-            Vector3 endPos = new Vector2(0, buttonFinalYPosition);
-
-            CanvasGroup buttonCanvasGroup = respawnButton.GetComponent<CanvasGroup>();
-            if (buttonCanvasGroup == null)
-            {
-                buttonCanvasGroup = respawnButton.gameObject.AddComponent<CanvasGroup>();
-            }
-            buttonCanvasGroup.alpha = 0f;
-
-            while (elapsed < slideDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / slideDuration;
-                t = 1f - Mathf.Pow(1f - t, 3f);
-
-                respawnButton.GetComponent<RectTransform>().anchoredPosition = Vector3.Lerp(startPos, endPos, t);
-                buttonCanvasGroup.alpha = t;
-
-                yield return null;
-            }
-
-            respawnButton.GetComponent<RectTransform>().anchoredPosition = endPos;
-            buttonCanvasGroup.alpha = 1f;
+            respawnButton.GetComponent<RectTransform>().anchoredPosition = respawnEndPos;
+            if (respawnCG != null) respawnCG.alpha = 1f;
+        }
+        if (quitButton != null)
+        {
+            quitButton.GetComponent<RectTransform>().anchoredPosition = quitEndPos;
+            if (quitCG != null) quitCG.alpha = 1f;
         }
     }
 
@@ -316,73 +320,39 @@ public class DeathScreen : MonoBehaviour
     {
         Debug.Log("HideDeathScreen appelé !");
 
-        // Arrête toutes les animations en cours
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         StopAllCoroutines();
 
-        // FORCE le cache des éléments individuellement (au cas où)
-        if (respawnButton != null)
-        {
-            respawnButton.gameObject.SetActive(false);
-            Debug.Log("Bouton caché");
-        }
-        if (motivationalText != null)
-        {
-            motivationalText.gameObject.SetActive(false);
-            Debug.Log("Texte motivationnel caché");
-        }
-        if (mainTitleText != null)
-        {
-            mainTitleText.gameObject.SetActive(false);
-            Debug.Log("Titre caché");
-        }
-        if (darkOverlay != null)
-        {
-            darkOverlay.gameObject.SetActive(false);
-            Debug.Log("Overlay caché");
-        }
+        if (respawnButton != null) respawnButton.gameObject.SetActive(false);
+        if (quitButton != null) quitButton.gameObject.SetActive(false);
+        if (motivationalText != null) motivationalText.gameObject.SetActive(false);
+        if (mainTitleText != null) mainTitleText.gameObject.SetActive(false);
+        if (darkOverlay != null) darkOverlay.gameObject.SetActive(false);
 
-        // Cache le panel principal EN DERNIER
         if (deathScreenPanel != null)
-        {
             deathScreenPanel.SetActive(false);
-            Debug.Log("Panel caché - Active state: " + deathScreenPanel.activeSelf);
-        }
 
-        // Réaffiche l'UI de jeu
         if (gameUIPanel != null)
-        {
             gameUIPanel.SetActive(true);
-            Debug.Log("UI de jeu réaffichée");
-        }
-
-        // NE PAS réinitialiser les éléments tout de suite
-        // On le fera au prochain ShowDeathScreen
     }
 
     private void ResetUIElements()
     {
-        // Réinitialise tous les éléments pour qu'ils soient prêts pour l'animation
         if (mainTitleText != null)
         {
             mainTitleText.gameObject.SetActive(true);
-            mainTitleText.rectTransform.anchoredPosition = new Vector2(0, 0); // Centre pour le début
+            mainTitleText.rectTransform.anchoredPosition = new Vector2(0, 0);
         }
-
         if (motivationalText != null)
         {
-            motivationalText.gameObject.SetActive(false); // Caché au début
+            motivationalText.gameObject.SetActive(false);
             motivationalText.text = "";
         }
-
-        if (respawnButton != null)
-        {
-            respawnButton.gameObject.SetActive(false); // Caché au début
-        }
-
-        if (darkOverlay != null)
-        {
-            darkOverlay.gameObject.SetActive(true);
-        }
+        if (respawnButton != null) respawnButton.gameObject.SetActive(false);
+        if (quitButton != null) quitButton.gameObject.SetActive(false);
+        if (darkOverlay != null) darkOverlay.gameObject.SetActive(true);
     }
 
     void OnRespawnClicked()
@@ -391,15 +361,21 @@ public class DeathScreen : MonoBehaviour
         RespawnPlayer();
     }
 
+    void OnQuitClicked()
+    {
+        Debug.Log("Quitter le jeu !");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     void RespawnPlayer()
     {
         if (playerHealth != null)
-        {
             playerHealth.Respawn();
-        }
         else
-        {
             Debug.LogError("Impossible de respawn : PlayerHealth non trouvé !");
-        }
     }
 }
