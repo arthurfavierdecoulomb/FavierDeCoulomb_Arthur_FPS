@@ -45,6 +45,14 @@ public class ZombieEnemy : MonoBehaviour
     [Tooltip("Temps avant que le corps ne disparaisse après la mort")]
     [SerializeField] private float timeBeforeDestroy = 5f;
 
+    [Header("Patrouille")]
+    [SerializeField] private float patrolRadius = 10f;        // Rayon de déplacement aléatoire
+    [SerializeField] private float patrolWaitMin = 2f;        // Attente min en idle
+    [SerializeField] private float patrolWaitMax = 5f;        // Attente max en idle
+    private float patrolWaitTimer = 0f;
+    private float patrolWaitDuration = 0f;
+    private bool isPatrolling = false;
+
     // État du zombie
     private float lastAttackTime;
     private bool isDead = false;
@@ -74,6 +82,8 @@ public class ZombieEnemy : MonoBehaviour
     {
         // Récupérer le NavMeshAgent
         agent = GetComponent<NavMeshAgent>();
+        agent.speed = walkSpeed;
+        agent.stoppingDistance = attackRange - 0.1f; // S'arrête juste dans la portée d'attaque
         if (agent == null)
         {
             Debug.LogError("NavMeshAgent manquant sur " + gameObject.name + " - Ajoutez Component ? Navigation ? Nav Mesh Agent");
@@ -127,18 +137,31 @@ public class ZombieEnemy : MonoBehaviour
     {
         if (isDead || player == null) return;
 
-        // Calculer la distance au joueur
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        //Debug.Log("Distance : " + distanceToPlayer + " | attackRange : " + attackRange);
 
-        // Machine à états
         UpdateState(distanceToPlayer);
     }
 
     void UpdateState(float distanceToPlayer)
     {
+        if (playerHealth != null && playerHealth.GetHealth() <= 0)
+        {
+            isPatrolling = false;
+            patrolWaitTimer = 0f;
+            patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
+
+            if (currentState != ZombieState.Idle)
+            {
+                OnStateExit(currentState);
+                currentState = ZombieState.Idle;
+                OnStateEnter(ZombieState.Idle);
+            }
+            return;
+        }
+
         ZombieState newState = currentState;
 
-        // Déterminer le nouvel état en fonction de la distance
         if (distanceToPlayer <= attackRange)
         {
             newState = ZombieState.Attacking;
@@ -152,7 +175,6 @@ public class ZombieEnemy : MonoBehaviour
             newState = ZombieState.Idle;
         }
 
-        // Si l'état change, effectuer les actions de transition
         if (newState != currentState)
         {
             OnStateExit(currentState);
@@ -160,7 +182,6 @@ public class ZombieEnemy : MonoBehaviour
             OnStateEnter(currentState);
         }
 
-        // Exécuter le comportement de l'état actuel
         ExecuteState(currentState);
     }
 
@@ -182,6 +203,7 @@ public class ZombieEnemy : MonoBehaviour
             case ZombieState.Attacking:
                 agent.isStopped = true;
                 animator.SetBool(PARAM_IS_RUNNING, false);
+                animator.ResetTrigger(PARAM_ATTACK); // Nettoie le trigger en attente
                 break;
         }
     }
@@ -196,7 +218,7 @@ public class ZombieEnemy : MonoBehaviour
         switch (state)
         {
             case ZombieState.Idle:
-                // Rien de spécial en idle, juste l'animation
+                PatrolBehaviour();
                 break;
 
             case ZombieState.Chasing:
@@ -206,6 +228,7 @@ public class ZombieEnemy : MonoBehaviour
             case ZombieState.Attacking:
                 AttackPlayer();
                 break;
+
         }
     }
 
@@ -220,16 +243,24 @@ public class ZombieEnemy : MonoBehaviour
 
     void AttackPlayer()
     {
-        // Regarder le joueur pendant l'attaque
         RotateTowards(player.position);
 
-        // Attaquer si le cooldown est terminé
         if (Time.time >= lastAttackTime + attackCooldown)
         {
+            animator.ResetTrigger(PARAM_ATTACK);
             animator.SetTrigger(PARAM_ATTACK);
             lastAttackTime = Time.time;
 
-            Debug.Log(gameObject.name + " lance une attaque !");
+            // Dégâts directs
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(attackDamage);
+                Debug.Log("Dégâts infligés : " + attackDamage);
+            }
+            else
+            {
+                Debug.LogError("playerHealth est NULL !");
+            }
         }
     }
 
@@ -258,6 +289,11 @@ public class ZombieEnemy : MonoBehaviour
     /// </summary>
     public void DealDamageToPlayer()
     {
+        Debug.Log("DealDamageToPlayer appelé ! playerHealth = " + playerHealth + " / isDead = " + isDead);
+
+        if (isDead || player == null || playerHealth == null) return;
+        
+
         if (isDead || player == null || playerHealth == null) return;
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
@@ -305,6 +341,54 @@ public class ZombieEnemy : MonoBehaviour
         }
     }
 
+    void PatrolBehaviour()
+    {
+        patrolWaitTimer += Time.deltaTime;
+
+        if (!isPatrolling)
+        {
+            // Attend un moment en idle avant de repartir
+            if (patrolWaitTimer >= patrolWaitDuration)
+            {
+                Vector3 randomDestination = GetRandomNavMeshPosition();
+                if (randomDestination != Vector3.zero)
+                {
+                    agent.isStopped = false;
+                    agent.speed = walkSpeed;
+                    agent.SetDestination(randomDestination);
+                    animator.SetBool(PARAM_IS_RUNNING, true);
+                    isPatrolling = true;
+                    patrolWaitTimer = 0f;
+                }
+            }
+        }
+        else
+        {
+            // Est-ce qu'il est arrivé à destination ?
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            {
+                agent.isStopped = true;
+                animator.SetBool(PARAM_IS_RUNNING, false);
+                isPatrolling = false;
+                patrolWaitTimer = 0f;
+                patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
+            }
+        }
+    }
+
+    Vector3 GetRandomNavMeshPosition()
+    {
+        Vector3 randomDirection = Random.insideUnitSphere * patrolRadius;
+        randomDirection += transform.position;
+
+        UnityEngine.AI.NavMeshHit hit;
+        if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out hit, patrolRadius, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        return Vector3.zero;
+    }
+
     void Die()
     {
         if (isDead) return;
@@ -329,7 +413,7 @@ public class ZombieEnemy : MonoBehaviour
             col.enabled = false;
         }
 
-        // Optionnel : Désactiver le rigidbody s'il y en a un
+        // Désactiver le rigidbody s'il y en a un
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -372,4 +456,6 @@ public class ZombieEnemy : MonoBehaviour
             }
         }
     }
+
+
 }

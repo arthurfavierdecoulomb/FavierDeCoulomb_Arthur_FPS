@@ -2916,15 +2916,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9175494979080144762, guid: 6e2c30ab2e41c35459e05f6443a8f952, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1547584452}
-    - targetCorrespondingSourceObject: {fileID: 9175494979080144762, guid: 6e2c30ab2e41c35459e05f6443a8f952, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1547584456}
     - targetCorrespondingSourceObject: {fileID: -302684674550743678, guid: 6e2c30ab2e41c35459e05f6443a8f952, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1126065135}
-    - targetCorrespondingSourceObject: {fileID: -302684674550743678, guid: 6e2c30ab2e41c35459e05f6443a8f952, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1126065142}
     - targetCorrespondingSourceObject: {fileID: 5292164422725635733, guid: 6e2c30ab2e41c35459e05f6443a8f952, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1126065131}
@@ -3117,26 +3111,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
   m_Center: {x: 0, y: 0, z: 0.000000029802322}
---- !u!114 &1126065142
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1126065127}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
-  openAngle: 90
-  openSpeed: 3
-  closeSpeed: 2
-  rotationAxis: {x: 0, y: 1, z: 0}
-  invertDirection: 0
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
 --- !u!1 &1186428399
 GameObject:
   m_ObjectHideFlags: 0
@@ -3882,7 +3856,7 @@ MonoBehaviour:
   doorWoodPrefab: {fileID: 1126065128}
   doorGlassPrefab: {fileID: 1126065127}
   cornerLargePrefab: {fileID: 1126065125}
-  floorScale: {x: 2.75, y: 2.75, z: 2.75}
+  floorScale: {x: 3, y: 3, z: 3}
   wallScale: {x: 3, y: 3, z: 3}
   doorScale: {x: 3, y: 3, z: 3}
   cornerScale: {x: 3, y: 3, z: 3}
@@ -3948,26 +3922,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1547584456
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1126065128}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
-  openAngle: 90
-  openSpeed: 3
-  closeSpeed: 2
-  rotationAxis: {x: 0, y: 1, z: 0}
-  invertDirection: 0
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
 --- !u!1 &1595481295
 GameObject:
   m_ObjectHideFlags: 0
