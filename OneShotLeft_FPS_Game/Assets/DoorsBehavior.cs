@@ -39,19 +39,31 @@ public class DoorRotate : MonoBehaviour
 
     void Start()
     {
+        Init();
+    }
+
+    /// Appelé par le MapGenerator au lieu de Start() pour configurer les paramètres
+    public void SetupFromGenerator(float openAngle, float openSpd, float closeSpd)
+    {
+        this.openAngle = openAngle;
+        this.openSpeed = openSpd;
+        this.closeSpeed = closeSpd;
+        Init();
+    }
+
+    void Init()
+    {
         closedRotation = transform.localRotation;
 
         float dir = invertDirection ? -1f : 1f;
         openRotation = closedRotation * Quaternion.AngleAxis(openAngle * dir, rotationAxis);
 
-        // Trouve le joueur
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
             player = playerObj.transform;
         else
             Debug.LogWarning("DoorRotate : Aucun joueur trouvé avec le tag 'Player' !");
 
-        // Audio
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null && (openSound != null || closeSound != null))
             audioSource = gameObject.AddComponent<AudioSource>();

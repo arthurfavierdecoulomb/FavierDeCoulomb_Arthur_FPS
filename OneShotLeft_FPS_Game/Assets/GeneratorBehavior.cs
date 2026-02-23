@@ -32,21 +32,27 @@ public class MapGenerator : MonoBehaviour
 
     [Header("Offset Y des éléments")]
     [SerializeField] private float floorYOffset = 0f;
-    [SerializeField] private float wallYOffset = 0f;   // Y du premier niveau de mur
-    [SerializeField] private float wall2YOffset = 4f;   // Y du deuxième niveau de mur (étage)
-    [SerializeField] private float ceilingYOffset = 8f;   // Y du plafond (= 2x hauteur mur)
+    [SerializeField] private float wallYOffset = 0f;
+    [SerializeField] private float wall2YOffset = 4f;
+    [SerializeField] private float ceilingYOffset = 8f;
     [SerializeField] private float doorYOffset = 0f;
     [SerializeField] private float cornerYOffset = 0f;
-    [SerializeField] private float corner2YOffset = 4f;   // Coins du deuxième niveau
+    [SerializeField] private float corner2YOffset = 4f;
 
     [Header("Offset porte dans l'interstice")]
     [SerializeField] private Vector3 doorOffset = Vector3.zero;
 
+    [Header("Paramètres rotation porte")]
+    [SerializeField] private float doorPivotOffset = 0.5f; // Demi-largeur de la porte (distance centre → gond)
+    [SerializeField] private float doorOpenAngle = 90f;  // Angle d'ouverture
+    [SerializeField] private float doorOpenSpeed = 3f;   // Vitesse ouverture
+    [SerializeField] private float doorCloseSpeed = 2f;   // Vitesse fermeture
+
     [Header("Paramètres de génération")]
-    [SerializeField] private int roomCount = 8;
+    [SerializeField] private int roomCount = 6;
     [SerializeField] private float tileSize = 4f;
-    [SerializeField] private int mapWidth = 50;
-    [SerializeField] private int mapHeight = 50;
+    [SerializeField] private int mapWidth = 30;
+    [SerializeField] private int mapHeight = 30;
     [SerializeField] private int seed = 0;
 
     [Header("Tailles des pièces")]
@@ -60,9 +66,15 @@ public class MapGenerator : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float glassVsWoodChance = 0.4f;
 
     [Header("Joueur")]
-    [SerializeField] private Transform playerTransform; // Joueur déjà dans la scène
-    [SerializeField] private GameObject playerPrefab;   // OU prefab à instancier
-    [SerializeField] private float playerSpawnYOffset = 1f; // Hauteur au-dessus du sol
+    [SerializeField] private Transform playerTransform;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private float playerSpawnYOffset = 1f;
+
+    [Header("Ennemis")]
+    [SerializeField] private GameObject zombiePrefab;
+    [SerializeField] private int zombiesPerSmallRoom = 1;  // Petite pièce
+    [SerializeField] private int zombiesPerLargeRoom = 3;  // Grande pièce
+    [SerializeField] private float zombieSpawnYOffset = 0.1f;
 
     private enum TileType { Empty, Floor, Corridor }
     private TileType[,] grid;
@@ -90,6 +102,7 @@ public class MapGenerator : MonoBehaviour
         GenerateRooms();
         ConnectRooms();
         BuildGeometry();
+        SpawnEnemies();
         SpawnPlayer();
         Debug.Log("Map générée ! " + rooms.Count + " pièces.");
     }
@@ -108,10 +121,9 @@ public class MapGenerator : MonoBehaviour
                                  (isLarge ? largeRoomMax : smallRoomMax) + 1);
             int h = Random.Range(isLarge ? largeRoomMin : smallRoomMin,
                                  (isLarge ? largeRoomMax : smallRoomMax) + 1);
-            // Clamp strict pour éviter tout dépassement de grille
             int maxX = mapWidth - w - 1;
             int maxY = mapHeight - h - 1;
-            if (maxX < 2 || maxY < 2) continue; // pièce trop grande pour la grille
+            if (maxX < 2 || maxY < 2) continue;
 
             int x = Random.Range(2, maxX);
             int y = Random.Range(2, maxY);
@@ -142,7 +154,7 @@ public class MapGenerator : MonoBehaviour
     {
         for (int x = room.x; x < room.x + room.width; x++)
             for (int y = room.y; y < room.y + room.height; y++)
-                if (IsInBounds(x, y)) // Guard anti-crash
+                if (IsInBounds(x, y))
                     grid[x, y] = TileType.Floor;
     }
 
@@ -164,16 +176,8 @@ public class MapGenerator : MonoBehaviour
 
     void CarveCorridor(Vector2Int from, Vector2Int to)
     {
-        if (Random.value > 0.5f)
-        {
-            CarveH(from.x, to.x, from.y);
-            CarveV(from.y, to.y, to.x);
-        }
-        else
-        {
-            CarveV(from.y, to.y, from.x);
-            CarveH(from.x, to.x, to.y);
-        }
+        if (Random.value > 0.5f) { CarveH(from.x, to.x, from.y); CarveV(from.y, to.y, to.x); }
+        else { CarveV(from.y, to.y, from.x); CarveH(from.x, to.x, to.y); }
     }
 
     void CarveH(int xFrom, int xTo, int y)
@@ -197,8 +201,10 @@ public class MapGenerator : MonoBehaviour
         var wallParent = Child("Walls");
         var cornerParent = Child("Corners");
 
-        // Jonctions pièce ↔ couloir = tiles qui auront une porte
         HashSet<Vector2Int> doorTiles = ComputeDoorTiles();
+
+        int spawnCount = 0;
+        int maxSpawns = mapWidth * mapHeight * 12; // Limite de sécurité anti-freeze
 
         for (int x = 0; x < mapWidth; x++)
         {
@@ -207,28 +213,34 @@ public class MapGenerator : MonoBehaviour
                 TileType tile = grid[x, y];
                 if (tile == TileType.Empty) continue;
 
+                if (spawnCount > maxSpawns)
+                {
+                    Debug.LogError($"SÉCURITÉ : trop d'objets ({spawnCount}), arrêt ! Réduis mapWidth/mapHeight dans l'Inspector.");
+                    return;
+                }
+
                 Vector3 wp = GridToWorld(x, y);
 
                 // SOL
-                SpawnPrefab(floorPrefab, wp, 0f, floorParent, floorScale, floorBaseRot, floorYOffset);
+                SpawnPrefab(floorPrefab, wp, 0f, floorParent, floorScale, floorBaseRot, floorYOffset); spawnCount++;
 
-                // PLAFOND (Floor retourné, hauteur double)
+                // PLAFOND
                 var ceilRot = new Vector3(floorBaseRot.x + 180f, floorBaseRot.y, floorBaseRot.z);
-                SpawnRaw(floorPrefab, wp, ceilRot, floorParent, floorScale, ceilingYOffset);
+                SpawnRaw(floorPrefab, wp, ceilRot, floorParent, floorScale, ceilingYOffset); spawnCount++;
 
-                // MURS EXTÉRIEURS — niveau 1 : porte ou mur, niveau 2 : toujours mur plein
-                if (IsEmpty(x, y + 1)) { SpawnWallOrDoor(x, y, 0f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 0f, wallParent, wall2YOffset); }
-                if (IsEmpty(x, y - 1)) { SpawnWallOrDoor(x, y, 180f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 180f, wallParent, wall2YOffset); }
-                if (IsEmpty(x + 1, y)) { SpawnWallOrDoor(x, y, 90f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 90f, wallParent, wall2YOffset); }
-                if (IsEmpty(x - 1, y)) { SpawnWallOrDoor(x, y, 270f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 270f, wallParent, wall2YOffset); }
+                // MURS EXTÉRIEURS (bord sur Empty)
+                if (IsEmpty(x, y + 1)) { SpawnWallOrDoor(x, y, 0f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 0f, wallParent, wall2YOffset); spawnCount += 2; }
+                if (IsEmpty(x, y - 1)) { SpawnWallOrDoor(x, y, 180f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 180f, wallParent, wall2YOffset); spawnCount += 2; }
+                if (IsEmpty(x + 1, y)) { SpawnWallOrDoor(x, y, 90f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 90f, wallParent, wall2YOffset); spawnCount += 2; }
+                if (IsEmpty(x - 1, y)) { SpawnWallOrDoor(x, y, 270f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 270f, wallParent, wall2YOffset); spawnCount += 2; }
 
-                // PORTES : jonctions pièce ↔ couloir (ces murs ne sont PAS sur un bord Empty !)
+                // PORTES : jonctions pièce ↔ couloir
                 if (tile == TileType.Floor)
                 {
-                    if (IsCorridor(x, y + 1)) { SpawnWallOrDoor(x, y, 0f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 0f, wallParent, wall2YOffset); }
-                    if (IsCorridor(x, y - 1)) { SpawnWallOrDoor(x, y, 180f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 180f, wallParent, wall2YOffset); }
-                    if (IsCorridor(x + 1, y)) { SpawnWallOrDoor(x, y, 90f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 90f, wallParent, wall2YOffset); }
-                    if (IsCorridor(x - 1, y)) { SpawnWallOrDoor(x, y, 270f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 270f, wallParent, wall2YOffset); }
+                    if (IsCorridor(x, y + 1)) { SpawnWallOrDoor(x, y, 0f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 0f, wallParent, wall2YOffset); spawnCount += 2; }
+                    if (IsCorridor(x, y - 1)) { SpawnWallOrDoor(x, y, 180f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 180f, wallParent, wall2YOffset); spawnCount += 2; }
+                    if (IsCorridor(x + 1, y)) { SpawnWallOrDoor(x, y, 90f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 90f, wallParent, wall2YOffset); spawnCount += 2; }
+                    if (IsCorridor(x - 1, y)) { SpawnWallOrDoor(x, y, 270f, wallParent, doorTiles, wallYOffset); SpawnWall(x, y, 270f, wallParent, wall2YOffset); spawnCount += 2; }
                 }
 
                 // MURS LATÉRAUX COULOIR (tunnel)
@@ -236,21 +248,21 @@ public class MapGenerator : MonoBehaviour
                 {
                     SpawnCorridorSideWalls(x, y, wallParent, wallYOffset);
                     SpawnCorridorSideWalls(x, y, wallParent, wall2YOffset);
+                    spawnCount += 4;
                 }
             }
         }
 
-        // COINS — deux niveaux
         SpawnCorners(cornerParent, cornerYOffset);
         SpawnCorners(cornerParent, corner2YOffset);
+
+        Debug.Log($"BuildGeometry terminé : {spawnCount} objets créés.");
     }
 
-    // Tiles COULOIR adjacents à une pièce → jonction = porte
     HashSet<Vector2Int> ComputeDoorTiles()
     {
         var doorTiles = new HashSet<Vector2Int>();
         int floorCount = 0, corridorCount = 0;
-
         for (int x = 0; x < mapWidth; x++)
             for (int y = 0; y < mapHeight; y++)
             {
@@ -260,15 +272,12 @@ public class MapGenerator : MonoBehaviour
                     if (IsFloor(x + 1, y) || IsFloor(x - 1, y) || IsFloor(x, y + 1) || IsFloor(x, y - 1))
                         doorTiles.Add(new Vector2Int(x, y));
             }
-
         Debug.Log($"=== DIAGNOSTIC === Floor:{floorCount} Corridor:{corridorCount} DoorTiles:{doorTiles.Count}");
         Debug.Log($"wallDoorFrame:{wallDoorFramePrefab != null} | doorWood:{doorWoodPrefab != null} | doorGlass:{doorGlassPrefab != null}");
-
         return doorTiles;
     }
 
-    // Mur plein (niveau 2 ou couloir)
-    void SpawnWall(int x, int y, float angle, Transform parent, float wallYOffset = 0f)
+    void SpawnWall(int x, int y, float angle, Transform parent, float yOff = 0f)
     {
         float h = tileSize / 2f;
         Vector3 offset = angle switch
@@ -279,10 +288,9 @@ public class MapGenerator : MonoBehaviour
             270f => new Vector3(-h, 0, 0),
             _ => Vector3.zero
         };
-        SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + offset, angle, parent, wallScale, wallBaseRot, wallYOffset);
+        SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + offset, angle, parent, wallScale, wallBaseRot, yOff);
     }
 
-    // Mur niveau 1 : plein OU porte si jonction couloir/pièce
     void SpawnWallOrDoor(int x, int y, float angle, Transform parent,
         HashSet<Vector2Int> doorTiles, float yOff)
     {
@@ -297,23 +305,18 @@ public class MapGenerator : MonoBehaviour
         };
         Vector3 wp = GridToWorld(x, y) + offset;
 
-        // Le tile voisin dans la direction du mur
         int nx = x, ny = y;
         if (angle == 0f) ny += 1;
         else if (angle == 180f) ny -= 1;
         else if (angle == 90f) nx += 1;
         else if (angle == 270f) nx -= 1;
 
-        // Porte si :
-        // Ce tile est couloir adjacent à pièce, et le mur pointe vers la pièce
-        // OU ce tile est pièce, et le mur pointe vers un couloir marqué doorTile
         bool isDoor =
             (grid[x, y] == TileType.Floor && doorTiles.Contains(new Vector2Int(nx, ny))) ||
             (grid[x, y] == TileType.Corridor && doorTiles.Contains(new Vector2Int(x, y)) && IsFloor(nx, ny));
 
         if (isDoor)
         {
-            // On prend les coordonnées de la pièce pour savoir si grande ou petite
             int roomX = IsFloor(x, y) ? x : nx;
             int roomY = IsFloor(x, y) ? y : ny;
             bool isLarge = IsLargeRoom(roomX, roomY);
@@ -322,17 +325,23 @@ public class MapGenerator : MonoBehaviour
 
             if (isLarge)
             {
+                // Cadre double porte
                 SpawnPrefab(wallDoubleDoorFramePrefab != null ? wallDoubleDoorFramePrefab : wallLongPrefab,
                     wp, angle, parent, wallScale, wallBaseRot, yOff);
-                Vector3 dpos = wp + doorOffset;
-                SpawnPrefab(dp, dpos, angle, parent, doorScale, doorBaseRot, doorYOffset);
-                SpawnPrefab(dp, dpos, angle - 180f, parent, doorScale, doorBaseRot, doorYOffset);
+
+                // Porte gauche — pivot au bord gauche de la porte
+                SpawnDoorWithPivot(dp, wp + doorOffset, angle, parent, yOff, pivotSide: -1f);
+                // Porte droite — pivot au bord droit, rotation inversée
+                SpawnDoorWithPivot(dp, wp + doorOffset, angle - 180f, parent, yOff, pivotSide: 1f);
             }
             else
             {
+                // Cadre simple porte
                 SpawnPrefab(wallDoorFramePrefab != null ? wallDoorFramePrefab : wallLongPrefab,
                     wp, angle, parent, wallScale, wallBaseRot, yOff);
-                SpawnPrefab(dp, wp + doorOffset, angle, parent, doorScale, doorBaseRot, doorYOffset);
+
+                // Porte simple — pivot au bord gauche
+                SpawnDoorWithPivot(dp, wp + doorOffset, angle, parent, yOff, pivotSide: -1f);
             }
         }
         else
@@ -341,20 +350,49 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Spawn une porte avec un pivot vide positionné au bord (gond).
+    /// La porte est enfant du pivot, décalée de -pivotSide * doorHalfWidth sur son axe local X.
+    /// DoorRotate est ajouté sur le pivot pour que la rotation soit correcte.
+    /// </summary>
+    void SpawnDoorWithPivot(GameObject prefab, Vector3 doorCenter, float angleY,
+        Transform parent, float yOff, float pivotSide)
+    {
+        if (prefab == null) return;
+
+        // Le pivot est au bord de la porte (décalé de doorHalfWidth dans la direction locale X)
+        // doorPivotOffset permet de régler finement depuis l'Inspector
+        Vector3 localRight = Quaternion.Euler(doorBaseRot.x, doorBaseRot.y + angleY, doorBaseRot.z) * Vector3.right;
+        Vector3 pivotWorldPos = doorCenter + localRight * (doorPivotOffset * pivotSide);
+        pivotWorldPos.y += yOff + doorYOffset;
+
+        // Créer le pivot vide
+        GameObject pivot = new GameObject("DoorPivot");
+        pivot.transform.position = pivotWorldPos;
+        pivot.transform.rotation = Quaternion.Euler(doorBaseRot.x, doorBaseRot.y + angleY, doorBaseRot.z);
+        pivot.transform.parent = parent;
+
+        // Instancier la porte en enfant du pivot, décalée vers le centre de l'interstice
+        GameObject doorObj = Instantiate(prefab, Vector3.zero, Quaternion.identity, pivot.transform);
+        doorObj.transform.localPosition = new Vector3(-doorPivotOffset * pivotSide, 0f, 0f);
+        doorObj.transform.localRotation = Quaternion.identity;
+        doorObj.transform.localScale = doorScale;
+
+        // Ajouter DoorRotate sur le pivot
+        DoorRotate dr = pivot.AddComponent<DoorRotate>();
+        dr.SetupFromGenerator(doorOpenAngle, doorOpenSpeed, doorCloseSpeed);
+    }
+
     void SpawnCorridorSideWalls(int x, int y, Transform parent, float yOff)
     {
         bool horizontal = IsCorridorOrFloor(x + 1, y) || IsCorridorOrFloor(x - 1, y);
         bool vertical = IsCorridorOrFloor(x, y + 1) || IsCorridorOrFloor(x, y - 1);
         float h = tileSize / 2f;
 
-        if (horizontal && !IsCorridorOrFloor(x, y + 1))
-            SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(0, 0, h), 0f, parent, wallScale, wallBaseRot, yOff);
-        if (horizontal && !IsCorridorOrFloor(x, y - 1))
-            SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(0, 0, -h), 180f, parent, wallScale, wallBaseRot, yOff);
-        if (vertical && !IsCorridorOrFloor(x + 1, y))
-            SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(h, 0, 0), 90f, parent, wallScale, wallBaseRot, yOff);
-        if (vertical && !IsCorridorOrFloor(x - 1, y))
-            SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(-h, 0, 0), 270f, parent, wallScale, wallBaseRot, yOff);
+        if (horizontal && !IsCorridorOrFloor(x, y + 1)) SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(0, 0, h), 0f, parent, wallScale, wallBaseRot, yOff);
+        if (horizontal && !IsCorridorOrFloor(x, y - 1)) SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(0, 0, -h), 180f, parent, wallScale, wallBaseRot, yOff);
+        if (vertical && !IsCorridorOrFloor(x + 1, y)) SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(h, 0, 0), 90f, parent, wallScale, wallBaseRot, yOff);
+        if (vertical && !IsCorridorOrFloor(x - 1, y)) SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(-h, 0, 0), 270f, parent, wallScale, wallBaseRot, yOff);
     }
 
     void SpawnCorners(Transform parent, float yOff)
@@ -381,6 +419,61 @@ public class MapGenerator : MonoBehaviour
     }
 
     // =============================================
+    // SPAWN ENNEMIS
+    // =============================================
+    void SpawnEnemies()
+    {
+        if (zombiePrefab == null)
+        {
+            Debug.LogWarning("Aucun prefab zombie assigné dans MapGenerator !");
+            return;
+        }
+
+        GameObject enemyParent = new GameObject("Enemies");
+        enemyParent.transform.parent = mapParent.transform;
+
+        // On skip la pièce 0 (spawn du joueur)
+        for (int i = 1; i < rooms.Count; i++)
+        {
+            RectInt room = rooms[i];
+            bool isLarge = roomIsLarge.ContainsKey(i) && roomIsLarge[i];
+            int zombieCount = isLarge ? zombiesPerLargeRoom : zombiesPerSmallRoom;
+
+            for (int z = 0; z < zombieCount; z++)
+            {
+                int rx, ry;
+
+                // Pièce trop petite pour avoir une marge → centre
+                if (room.width <= 2 || room.height <= 2)
+                {
+                    rx = room.x + room.width / 2;
+                    ry = room.y + room.height / 2;
+                }
+                else
+                {
+                    // Position aléatoire avec marge de 1 tile des bords
+                    rx = Random.Range(room.x + 1, room.x + room.width - 1);
+                    ry = Random.Range(room.y + 1, room.y + room.height - 1);
+                }
+
+                Vector3 spawnPos = GridToWorld(rx, ry);
+                spawnPos.y = floorYOffset + zombieSpawnYOffset;
+
+                Quaternion rot = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
+                Instantiate(zombiePrefab, spawnPos, rot, enemyParent.transform);
+            }
+        }
+
+        int total = 0;
+        for (int i = 1; i < rooms.Count; i++)
+        {
+            bool isLarge = roomIsLarge.ContainsKey(i) && roomIsLarge[i];
+            total += isLarge ? zombiesPerLargeRoom : zombiesPerSmallRoom;
+        }
+        Debug.Log($"Zombies spawnés : {total} dans {rooms.Count - 1} pièces.");
+    }
+
+    // =============================================
     // SPAWN JOUEUR
     // =============================================
     void SpawnPlayer()
@@ -391,26 +484,23 @@ public class MapGenerator : MonoBehaviour
             return;
         }
 
-        // Centre de la première pièce générée
         Vector2Int center = GetRoomCenter(rooms[0]);
         Vector3 spawnPos = GridToWorld(center.x, center.y);
         spawnPos.y = floorYOffset + playerSpawnYOffset;
 
         if (playerTransform != null)
         {
-            // Joueur déjà dans la scène → repositionnement
             playerTransform.position = spawnPos;
             Debug.Log("Joueur repositionné dans la pièce 0 : " + spawnPos);
         }
         else if (playerPrefab != null)
         {
-            // Prefab → instanciation
             Instantiate(playerPrefab, spawnPos, Quaternion.identity);
             Debug.Log("Joueur instancié dans la pièce 0 : " + spawnPos);
         }
         else
         {
-            Debug.LogWarning("Aucun joueur assigné dans MapGenerator ! Assigne Player Transform ou Player Prefab.");
+            Debug.LogWarning("Aucun joueur assigné dans MapGenerator !");
         }
     }
 

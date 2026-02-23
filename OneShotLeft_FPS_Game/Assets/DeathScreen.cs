@@ -29,10 +29,10 @@ public class DeathScreen : MonoBehaviour
     [Header("Final Positions (Y)")]
     [SerializeField] private float titleFinalYPosition = 150f;
     [SerializeField] private float motivationalFinalYPosition = 0f;
-    [SerializeField] private float buttonFinalYPosition = -130f; // Position Y commune aux deux boutons
+    [SerializeField] private float buttonFinalYPosition = -130f;
 
     [Header("Boutons - Alignement horizontal")]
-    [SerializeField] private float buttonSpacing = 120f; // Distance entre les deux boutons sur l'axe X
+    [SerializeField] private float buttonSpacing = 120f;
 
     [Header("Messages aléatoires")]
     private string[] deathTitles = new string[]
@@ -125,6 +125,7 @@ public class DeathScreen : MonoBehaviour
         "Bravo, tu as réussi à perdre dans un tutoriel."
     };
 
+    // Message et titre choisis UNE SEULE FOIS avant l'animation
     private string currentMessage = "";
 
     void Start()
@@ -146,6 +147,14 @@ public class DeathScreen : MonoBehaviour
     {
         if (deathScreenPanel != null)
         {
+            // 1. STOP toutes les coroutines AVANT tout pour éviter les doublons
+            StopAllCoroutines();
+
+            // 2. Choisir titre et message UNE SEULE FOIS ici, AVANT l'animation
+            string chosenTitle = deathTitles[Random.Range(0, deathTitles.Length)];
+            currentMessage = motivationalMessages[Random.Range(0, motivationalMessages.Length)];
+
+            // 3. Reset propre de l'UI
             ResetUIElements();
 
             Cursor.lockState = CursorLockMode.None;
@@ -156,27 +165,23 @@ public class DeathScreen : MonoBehaviour
             if (gameUIPanel != null)
                 gameUIPanel.SetActive(false);
 
+            // 4. Appliquer le titre déjà choisi (pas de nouveau Random ici !)
             if (mainTitleText != null)
             {
-                int randomTitleIndex = Random.Range(0, deathTitles.Length);
-                mainTitleText.text = deathTitles[randomTitleIndex];
+                mainTitleText.text = chosenTitle;
                 mainTitleText.rectTransform.anchoredPosition = new Vector2(0, 0);
             }
 
             if (motivationalText != null)
             {
-                int randomIndex = Random.Range(0, motivationalMessages.Length);
-                currentMessage = motivationalMessages[randomIndex];
                 motivationalText.text = "";
                 motivationalText.gameObject.SetActive(false);
             }
 
-            if (respawnButton != null)
-                respawnButton.gameObject.SetActive(false);
+            if (respawnButton != null) respawnButton.gameObject.SetActive(false);
+            if (quitButton != null) quitButton.gameObject.SetActive(false);
 
-            if (quitButton != null)
-                quitButton.gameObject.SetActive(false);
-
+            // 5. Lancer l'animation APRÈS avoir tout figé
             StartCoroutine(DeathScreenAnimation());
         }
     }
@@ -252,6 +257,7 @@ public class DeathScreen : MonoBehaviour
             textColor.a = 1f;
             motivationalText.color = textColor;
 
+            // Machine à écrire — utilise currentMessage déjà fixé AVANT l'animation
             motivationalText.text = "";
             for (int i = 0; i < currentMessage.Length; i++)
             {
@@ -262,11 +268,10 @@ public class DeathScreen : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
-        // PHASE 4 : Les deux boutons apparaissent ENSEMBLE, côte à côte sur le même Y
+        // PHASE 4 : Les deux boutons apparaissent ensemble
         if (respawnButton != null) respawnButton.gameObject.SetActive(true);
         if (quitButton != null) quitButton.gameObject.SetActive(true);
 
-        // Respawn à gauche, Quitter à droite — même Y
         Vector3 respawnEndPos = new Vector2(-buttonSpacing, buttonFinalYPosition);
         Vector3 quitEndPos = new Vector2(buttonSpacing, buttonFinalYPosition);
         Vector3 respawnStartPos = new Vector2(-buttonSpacing, buttonFinalYPosition - slideDistance);
@@ -303,7 +308,6 @@ public class DeathScreen : MonoBehaviour
             yield return null;
         }
 
-        // Position finale exacte
         if (respawnButton != null)
         {
             respawnButton.GetComponent<RectTransform>().anchoredPosition = respawnEndPos;
@@ -318,8 +322,6 @@ public class DeathScreen : MonoBehaviour
 
     public void HideDeathScreen()
     {
-        Debug.Log("HideDeathScreen appelé !");
-
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -363,7 +365,6 @@ public class DeathScreen : MonoBehaviour
 
     void OnQuitClicked()
     {
-        Debug.Log("Quitter le jeu !");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else

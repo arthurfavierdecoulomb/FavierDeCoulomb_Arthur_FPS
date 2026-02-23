@@ -1,461 +1,512 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 /// <summary>
-/// Script d'IA pour un ennemi zombie avec gestion complète des animations
-/// Compatible avec le système PlayerHealth existant
+/// IA Zombie intelligente :
+/// - Patrouille via NavMesh (reste dans les pièces/couloirs)
+/// - Poursuite par pathfinding (contourne les murs, traverse les portes)
+/// - Détection par ligne de vue ET distance
+/// - Perd le joueur si hors de vue trop longtemps
+/// - Retourne à sa pièce d'origine après avoir perdu la trace
 /// </summary>
 public class ZombieEnemy : MonoBehaviour
 {
     [Header("Références")]
-    [Tooltip("L'Animator du zombie (auto-assigné si vide)")]
     public Animator animator;
-
-    [Tooltip("Le Transform du joueur (auto-détecté par le tag 'Player' si vide)")]
     public Transform player;
-
     private NavMeshAgent agent;
     private PlayerHealth playerHealth;
 
     [Header("Paramètres de combat")]
-    [Tooltip("Points de vie du zombie")]
     [SerializeField] private int maxHealth = 100;
-    private int currentHealth;
-
-    [Tooltip("Distance à laquelle le zombie peut attaquer")]
     [SerializeField] private float attackRange = 2f;
-
-    [Tooltip("Distance à laquelle le zombie détecte le joueur")]
-    [SerializeField] private float detectionRange = 15f;
-
-    [Tooltip("Temps entre deux attaques")]
     [SerializeField] private float attackCooldown = 2f;
-
-    [Tooltip("Dégâts infligés au joueur par attaque")]
     [SerializeField] private int attackDamage = 10;
 
-    [Header("Paramètres de mouvement")]
-    [Tooltip("Vitesse de marche (idle/patrol)")]
-    [SerializeField] private float walkSpeed = 2f;
+    [Header("Détection")]
+    [SerializeField] private float detectionRange = 12f;  // Distance de détection directe
+    [SerializeField] private float hearingRange = 6f;   // Distance d'alerte sans ligne de vue
+    [SerializeField] private float losePlayerTime = 4f;   // Secondes avant de perdre le joueur
+    [SerializeField] private LayerMask obstacleMask;         // Layers qui bloquent la vue (murs, etc.)
 
-    [Tooltip("Vitesse de course (poursuite)")]
+    [Header("Mouvement")]
+    [SerializeField] private float walkSpeed = 1.5f;
     [SerializeField] private float runSpeed = 4f;
+    [SerializeField] private float rotateSpeed = 5f;
 
-    [Header("Paramètres d'animation")]
-    [Tooltip("Temps avant que le corps ne disparaisse après la mort")]
+    [Header("Patrouille NavMesh")]
+    [SerializeField] private float patrolRadius = 8f;   // Rayon de recherche de destination
+    [SerializeField] private float patrolWaitMin = 2f;
+    [SerializeField] private float patrolWaitMax = 5f;
+    [SerializeField] private int patrolSamples = 5;    // Tentatives pour trouver un point valide
+
+    [Header("Mort")]
     [SerializeField] private float timeBeforeDestroy = 5f;
 
-    [Header("Patrouille")]
-    [SerializeField] private float patrolRadius = 10f;        // Rayon de déplacement aléatoire
-    [SerializeField] private float patrolWaitMin = 2f;        // Attente min en idle
-    [SerializeField] private float patrolWaitMax = 5f;        // Attente max en idle
-    private float patrolWaitTimer = 0f;
-    private float patrolWaitDuration = 0f;
-    private bool isPatrolling = false;
-
-    // État du zombie
-    private float lastAttackTime;
-    private bool isDead = false;
-    private ZombieState currentState = ZombieState.Idle;
-
-    // Noms des paramètres de l'Animator
+    // Paramètres Animator
     private const string PARAM_IS_RUNNING = "IsRunning";
     private const string PARAM_ATTACK = "Attack";
     private const string PARAM_DEATH = "Death";
 
-    // Enum pour les états du zombie
-    public enum ZombieState
-    {
-        Idle,
-        Chasing,
-        Attacking,
-        Dead
-    }
+    // État interne
+    private int currentHealth;
+    private bool isDead = false;
+    private float lastAttackTime = 0f;
+    private float losePlayerTimer = 0f;
+    private bool canSeePlayer = false;
+    private Vector3 lastKnownPlayerPos;
+    private Vector3 spawnPosition;  // Position de spawn pour retour si perd le joueur
 
+    // Patrouille
+    private float patrolWaitTimer = 0f;
+    private float patrolWaitDuration = 0f;
+    private bool isWaitingAtPoint = true;
+
+    public enum ZombieState { Idle, Patrolling, Suspicious, Chasing, Attacking, Returning, Dead }
+    private ZombieState currentState = ZombieState.Idle;
+
+    // =============================================
     void Start()
     {
-        InitializeComponents();
         currentHealth = maxHealth;
+        spawnPosition = transform.position;
+        InitComponents();
+        SetState(ZombieState.Idle);
     }
 
-    void InitializeComponents()
+    void InitComponents()
     {
-        // Récupérer le NavMeshAgent
         agent = GetComponent<NavMeshAgent>();
+        if (agent == null) { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
+
         agent.speed = walkSpeed;
-        agent.stoppingDistance = attackRange - 0.1f; // S'arrête juste dans la portée d'attaque
-        if (agent == null)
-        {
-            Debug.LogError("NavMeshAgent manquant sur " + gameObject.name + " - Ajoutez Component ? Navigation ? Nav Mesh Agent");
-            enabled = false;
-            return;
-        }
+        agent.stoppingDistance = attackRange * 0.8f;
+        agent.angularSpeed = 0f; // On gère la rotation manuellement pour plus de fluidité
 
-        // Auto-assigner l'animator
-        if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-            if (animator == null)
-            {
-                Debug.LogError("Animator manquant sur " + gameObject.name);
-                enabled = false;
-                return;
-            }
-        }
+        if (animator == null) animator = GetComponent<Animator>();
+        if (animator == null) { Debug.LogError("Animator manquant sur " + name); enabled = false; return; }
 
-        // Auto-détecter le joueur
         if (player == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
             if (playerObj != null)
             {
                 player = playerObj.transform;
-                playerHealth = player.GetComponent<PlayerHealth>();
-
-                if (playerHealth == null)
-                {
-                    Debug.LogError("PlayerHealth manquant sur le joueur !");
-                }
+                playerHealth = playerObj.GetComponentInChildren<PlayerHealth>();
             }
-            else
-            {
-                Debug.LogWarning("Aucun joueur trouvé avec le tag 'Player' - Vérifiez que votre joueur a bien ce tag !");
-            }
+            else Debug.LogWarning("Aucun joueur avec le tag 'Player' !");
         }
         else
         {
-            // Si le player est assigné manuellement, récupérer son PlayerHealth
-            playerHealth = player.GetComponent<PlayerHealth>();
+            playerHealth = player.GetComponentInChildren<PlayerHealth>();
         }
-
-        // Configuration initiale
-        agent.speed = walkSpeed;
-        currentState = ZombieState.Idle;
     }
 
+    // =============================================
     void Update()
     {
         if (isDead || player == null) return;
 
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        //Debug.Log("Distance : " + distanceToPlayer + " | attackRange : " + attackRange);
-
-        UpdateState(distanceToPlayer);
+        UpdatePerception();
+        UpdateStateMachine();
     }
 
-    void UpdateState(float distanceToPlayer)
+    // =============================================
+    // PERCEPTION
+    // =============================================
+    void UpdatePerception()
     {
+        if (player == null) return;
+
+        float dist = Vector3.Distance(transform.position, player.position);
+
+        // Ligne de vue : raycast vers le joueur
+        bool lineOfSight = false;
+        if (dist <= detectionRange)
+        {
+            Vector3 dirToPlayer = (player.position - transform.position).normalized;
+            // On vise le torse du joueur
+            Vector3 origin = transform.position + Vector3.up * 1.5f;
+            Vector3 target = player.position + Vector3.up * 1.0f;
+
+            if (!Physics.Linecast(origin, target, obstacleMask))
+                lineOfSight = true;
+        }
+
+        // Entend le joueur même sans ligne de vue (très proche)
+        bool hearsPlayer = dist <= hearingRange;
+
+        canSeePlayer = lineOfSight || hearsPlayer;
+
+        if (canSeePlayer)
+        {
+            lastKnownPlayerPos = player.position;
+            losePlayerTimer = 0f;
+        }
+        else if (currentState == ZombieState.Chasing || currentState == ZombieState.Attacking)
+        {
+            losePlayerTimer += Time.deltaTime;
+        }
+    }
+
+    // =============================================
+    // MACHINE D'ÉTATS
+    // =============================================
+    void UpdateStateMachine()
+    {
+        // Le joueur est mort ? retour à la patrouille
         if (playerHealth != null && playerHealth.GetHealth() <= 0)
         {
-            isPatrolling = false;
-            patrolWaitTimer = 0f;
-            patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
-
-            if (currentState != ZombieState.Idle)
-            {
-                OnStateExit(currentState);
-                currentState = ZombieState.Idle;
-                OnStateEnter(ZombieState.Idle);
-            }
+            if (currentState != ZombieState.Patrolling && currentState != ZombieState.Idle)
+                SetState(ZombieState.Patrolling);
+            ExecuteState();
             return;
         }
 
-        ZombieState newState = currentState;
+        float dist = Vector3.Distance(transform.position, player.position);
 
-        if (distanceToPlayer <= attackRange)
-        {
-            newState = ZombieState.Attacking;
-        }
-        else if (distanceToPlayer <= detectionRange)
-        {
-            newState = ZombieState.Chasing;
-        }
-        else
-        {
-            newState = ZombieState.Idle;
-        }
-
-        if (newState != currentState)
-        {
-            OnStateExit(currentState);
-            currentState = newState;
-            OnStateEnter(currentState);
-        }
-
-        ExecuteState(currentState);
-    }
-
-    void OnStateEnter(ZombieState state)
-    {
-        switch (state)
+        switch (currentState)
         {
             case ZombieState.Idle:
-                agent.isStopped = true;
-                animator.SetBool(PARAM_IS_RUNNING, false);
+            case ZombieState.Patrolling:
+                if (canSeePlayer)
+                    SetState(ZombieState.Chasing);
                 break;
 
             case ZombieState.Chasing:
+                if (dist <= attackRange)
+                    SetState(ZombieState.Attacking);
+                else if (!canSeePlayer && losePlayerTimer >= losePlayerTime)
+                    SetState(ZombieState.Returning); // Retourne à sa zone
+                break;
+
+            case ZombieState.Attacking:
+                if (dist > attackRange * 1.3f) // Légère marge pour pas osciller
+                    SetState(ZombieState.Chasing);
+                else if (!canSeePlayer && losePlayerTimer >= losePlayerTime)
+                    SetState(ZombieState.Returning);
+                break;
+
+            case ZombieState.Returning:
+                if (canSeePlayer)
+                    SetState(ZombieState.Chasing);
+                else if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
+                    SetState(ZombieState.Patrolling); // Arrivé à destination ? reprend patrouille
+                break;
+        }
+
+        ExecuteState();
+    }
+
+    void SetState(ZombieState newState)
+    {
+        if (newState == currentState) return;
+
+        // Nettoyage sortie état
+        switch (currentState)
+        {
+            case ZombieState.Chasing:
+            case ZombieState.Attacking:
+                break;
+        }
+
+        currentState = newState;
+
+        // Init entrée état
+        switch (newState)
+        {
+            case ZombieState.Idle:
+                agent.isStopped = true;
+                agent.ResetPath();
+                animator.SetBool(PARAM_IS_RUNNING, false);
+                patrolWaitTimer = 0f;
+                patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
+                isWaitingAtPoint = true;
+                break;
+
+            case ZombieState.Patrolling:
+                agent.speed = walkSpeed;
                 agent.isStopped = false;
+                // Cherche immédiatement une destination
+                TrySetPatrolDestination();
+                break;
+
+            case ZombieState.Chasing:
                 agent.speed = runSpeed;
+                agent.isStopped = false;
                 animator.SetBool(PARAM_IS_RUNNING, true);
                 break;
 
             case ZombieState.Attacking:
                 agent.isStopped = true;
+                agent.ResetPath();
                 animator.SetBool(PARAM_IS_RUNNING, false);
-                animator.ResetTrigger(PARAM_ATTACK); // Nettoie le trigger en attente
+                animator.ResetTrigger(PARAM_ATTACK);
+                break;
+
+            case ZombieState.Returning:
+                agent.speed = walkSpeed;
+                agent.isStopped = false;
+                animator.SetBool(PARAM_IS_RUNNING, false);
+                // NavMesh trouve le chemin vers la dernière position connue puis vers le spawn
+                agent.SetDestination(lastKnownPlayerPos);
+                StartCoroutine(ReturnToSpawnAfterDelay(1.5f));
                 break;
         }
     }
 
-    void OnStateExit(ZombieState state)
+    IEnumerator ReturnToSpawnAfterDelay(float delay)
     {
-        // Nettoyage si nécessaire lors de la sortie d'un état
+        yield return new WaitForSeconds(delay);
+        if (currentState == ZombieState.Returning)
+            agent.SetDestination(spawnPosition);
     }
 
-    void ExecuteState(ZombieState state)
+    void ExecuteState()
     {
-        switch (state)
+        switch (currentState)
         {
             case ZombieState.Idle:
-                PatrolBehaviour();
+                ExecuteIdle();
                 break;
-
+            case ZombieState.Patrolling:
+                ExecutePatrol();
+                break;
             case ZombieState.Chasing:
-                ChasePlayer();
+                ExecuteChase();
                 break;
-
             case ZombieState.Attacking:
-                AttackPlayer();
+                ExecuteAttack();
                 break;
-
+            case ZombieState.Returning:
+                // Le NavMesh gère le déplacement, on tourne juste vers la destination
+                if (agent.hasPath)
+                    SmoothRotateTowards(agent.steeringTarget);
+                break;
         }
     }
 
-    void ChasePlayer()
-    {
-        // Déplacer vers le joueur
-        agent.SetDestination(player.position);
-
-        // Rotation fluide vers le joueur
-        RotateTowards(player.position);
-    }
-
-    void AttackPlayer()
-    {
-        RotateTowards(player.position);
-
-        if (Time.time >= lastAttackTime + attackCooldown)
-        {
-            animator.ResetTrigger(PARAM_ATTACK);
-            animator.SetTrigger(PARAM_ATTACK);
-            lastAttackTime = Time.time;
-
-            // Dégâts directs
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(attackDamage);
-                Debug.Log("Dégâts infligés : " + attackDamage);
-            }
-            else
-            {
-                Debug.LogError("playerHealth est NULL !");
-            }
-        }
-    }
-
-    void RotateTowards(Vector3 targetPosition)
-    {
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        direction.y = 0; // Garder la rotation horizontale seulement
-
-        if (direction != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
-        }
-    }
-
-    /// <summary>
-    /// ?? IMPORTANT : Appelé via Animation Event pendant l'animation d'attaque
-    /// 
-    /// COMMENT L'AJOUTER :
-    /// 1. Window ? Animation ? Animation
-    /// 2. Sélectionnez votre zombie
-    /// 3. Sélectionnez l'animation "Zombie Attack"
-    /// 4. Trouvez le frame où le zombie frappe (environ au milieu)
-    /// 5. Clic droit sur la timeline ? Add Animation Event
-    /// 6. Dans Function, sélectionnez : DealDamageToPlayer
-    /// </summary>
-    public void DealDamageToPlayer()
-    {
-        Debug.Log("DealDamageToPlayer appelé ! playerHealth = " + playerHealth + " / isDead = " + isDead);
-
-        if (isDead || player == null || playerHealth == null) return;
-        
-
-        if (isDead || player == null || playerHealth == null) return;
-
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        // Vérifier que le joueur est toujours à portée (avec une petite marge)
-        if (distanceToPlayer <= attackRange * 1.5f)
-        {
-            playerHealth.TakeDamage(attackDamage);
-            Debug.Log(gameObject.name + " a touché le joueur ! -" + attackDamage + " HP");
-        }
-        else
-        {
-            Debug.Log(gameObject.name + " a raté son attaque (joueur trop loin)");
-        }
-    }
-
-    /// <summary>
-    /// Méthode publique pour infliger des dégâts au zombie
-    /// Appelez cette méthode depuis vos armes/projectiles
-    /// 
-    /// EXEMPLE D'UTILISATION depuis un script d'arme :
-    /// 
-    /// RaycastHit hit;
-    /// if (Physics.Raycast(ray, out hit, range))
-    /// {
-    ///     ZombieEnemy zombie = hit.collider.GetComponent<ZombieEnemy>();
-    ///     if (zombie != null)
-    ///     {
-    ///         zombie.TakeDamage(weaponDamage);
-    ///     }
-    /// }
-    /// </summary>
-    public void TakeDamage(int damage)
-    {
-        if (isDead) return;
-
-        currentHealth -= damage;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-
-        Debug.Log(gameObject.name + " a reçu " + damage + " dégâts. Santé: " + currentHealth + "/" + maxHealth);
-
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
-    }
-
-    void PatrolBehaviour()
+    // =============================================
+    // ÉTATS
+    // =============================================
+    void ExecuteIdle()
     {
         patrolWaitTimer += Time.deltaTime;
+        if (patrolWaitTimer >= patrolWaitDuration)
+            SetState(ZombieState.Patrolling);
+    }
 
-        if (!isPatrolling)
+    void ExecutePatrol()
+    {
+        if (isWaitingAtPoint)
         {
-            // Attend un moment en idle avant de repartir
+            // Attend avant de bouger
+            patrolWaitTimer += Time.deltaTime;
             if (patrolWaitTimer >= patrolWaitDuration)
             {
-                Vector3 randomDestination = GetRandomNavMeshPosition();
-                if (randomDestination != Vector3.zero)
-                {
-                    agent.isStopped = false;
-                    agent.speed = walkSpeed;
-                    agent.SetDestination(randomDestination);
-                    animator.SetBool(PARAM_IS_RUNNING, true);
-                    isPatrolling = true;
-                    patrolWaitTimer = 0f;
-                }
+                isWaitingAtPoint = false;
+                TrySetPatrolDestination();
             }
         }
         else
         {
-            // Est-ce qu'il est arrivé à destination ?
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            // En déplacement vers un point de patrouille
+            if (agent.hasPath)
+                SmoothRotateTowards(agent.steeringTarget);
+
+            // Arrivé ?
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.2f)
             {
                 agent.isStopped = true;
                 animator.SetBool(PARAM_IS_RUNNING, false);
-                isPatrolling = false;
+                isWaitingAtPoint = true;
                 patrolWaitTimer = 0f;
                 patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
             }
         }
     }
 
-    Vector3 GetRandomNavMeshPosition()
+    void ExecuteChase()
     {
-        Vector3 randomDirection = Random.insideUnitSphere * patrolRadius;
-        randomDirection += transform.position;
+        // Met à jour la destination vers le joueur (via NavMesh ? contourne les murs)
+        if (canSeePlayer)
+            agent.SetDestination(player.position);
+        else
+            agent.SetDestination(lastKnownPlayerPos);
 
-        UnityEngine.AI.NavMeshHit hit;
-        if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out hit, patrolRadius, UnityEngine.AI.NavMesh.AllAreas))
+        if (agent.hasPath)
+            SmoothRotateTowards(agent.steeringTarget);
+
+        animator.SetBool(PARAM_IS_RUNNING, true);
+    }
+
+    void ExecuteAttack()
+    {
+        // Reste face au joueur pendant l'attaque
+        SmoothRotateTowards(player.position);
+
+        if (Time.time >= lastAttackTime + attackCooldown)
         {
-            return hit.position;
+            animator.ResetTrigger(PARAM_ATTACK);
+            animator.SetTrigger(PARAM_ATTACK);
+            lastAttackTime = Time.time;
         }
-        return Vector3.zero;
+    }
+
+    // =============================================
+    // PATROUILLE NAVMESH
+    // =============================================
+    void TrySetPatrolDestination()
+    {
+        // Essaie plusieurs fois de trouver un point valide sur le NavMesh
+        for (int i = 0; i < patrolSamples; i++)
+        {
+            Vector3 randomDir = Random.insideUnitSphere * patrolRadius;
+            randomDir += transform.position;
+            randomDir.y = transform.position.y;
+
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(randomDir, out hit, patrolRadius, NavMesh.AllAreas))
+            {
+                // Vérifie qu'un chemin complet existe (pas seulement un point proche)
+                NavMeshPath path = new NavMeshPath();
+                if (agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete)
+                {
+                    agent.SetDestination(hit.position);
+                    agent.isStopped = false;
+                    agent.speed = walkSpeed;
+                    animator.SetBool(PARAM_IS_RUNNING, true);
+                    return;
+                }
+            }
+        }
+
+        // Aucun point valide trouvé ? reste en idle un moment
+        SetState(ZombieState.Idle);
+    }
+
+    // =============================================
+    // ROTATION FLUIDE
+    // =============================================
+    void SmoothRotateTowards(Vector3 targetPos)
+    {
+        Vector3 dir = (targetPos - transform.position);
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.001f) return;
+
+        Quaternion target = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Slerp(transform.rotation, target, rotateSpeed * Time.deltaTime);
+    }
+
+    // =============================================
+    // DÉGÂTS & MORT
+    // =============================================
+
+    /// <summary>
+    /// Appelé via Animation Event au moment de l'impact dans l'animation d'attaque
+    /// </summary>
+    public void DealDamageToPlayer()
+    {
+        if (isDead || player == null || playerHealth == null) return;
+
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (dist <= attackRange * 1.5f)
+        {
+            playerHealth.TakeDamage(attackDamage);
+            Debug.Log(name + " frappe le joueur ! -" + attackDamage + " HP");
+        }
+    }
+
+    /// <summary>
+    /// Appelé par les armes/projectiles pour blesser le zombie
+    /// </summary>
+    public void TakeDamage(int damage)
+    {
+        if (isDead) return;
+
+        currentHealth = Mathf.Clamp(currentHealth - damage, 0, maxHealth);
+        Debug.Log(name + " reçoit " + damage + " dégâts ? " + currentHealth + "/" + maxHealth);
+
+        // Alerte si touché sans voir le joueur
+        if (!canSeePlayer && player != null)
+        {
+            lastKnownPlayerPos = player.position;
+            SetState(ZombieState.Chasing);
+        }
+
+        if (currentHealth <= 0) Die();
     }
 
     void Die()
     {
         if (isDead) return;
-
         isDead = true;
         currentState = ZombieState.Dead;
 
-        Debug.Log(gameObject.name + " est mort !");
+        StopAllCoroutines();
 
-        // Déclencher l'animation de mort
         animator.SetTrigger(PARAM_DEATH);
         animator.SetBool(PARAM_IS_RUNNING, false);
 
-        // Arrêter le mouvement
         agent.isStopped = true;
         agent.enabled = false;
 
-        // Désactiver le collider pour qu'on puisse marcher à travers le cadavre
         Collider col = GetComponent<Collider>();
-        if (col != null)
-        {
-            col.enabled = false;
-        }
+        if (col != null) col.enabled = false;
 
-        // Désactiver le rigidbody s'il y en a un
         Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.isKinematic = true;
-        }
+        if (rb != null) rb.isKinematic = true;
 
-        // Détruire le zombie après l'animation de mort
         Destroy(gameObject, timeBeforeDestroy);
+        Debug.Log(name + " est mort.");
     }
 
-    // Getters publics pour accéder aux informations du zombie
+    // =============================================
+    // GETTERS
+    // =============================================
     public int GetHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
     public bool IsDead() => isDead;
     public ZombieState GetCurrentState() => currentState;
 
-    /// <summary>
-    /// Gizmos pour visualiser les ranges dans l'éditeur Unity
-    /// Les cercles apparaissent quand le zombie est sélectionné
-    /// </summary>
+    // =============================================
+    // GIZMOS
+    // =============================================
     void OnDrawGizmosSelected()
     {
-        // Range d'attaque (rouge)
+        // Attaque
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
 
-        // Range de détection (jaune)
+        // Détection visuelle
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
-        // Ligne vers le joueur si détecté
+        // Écoute
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, hearingRange);
+
+        // Rayon de patrouille
+        Gizmos.color = new Color(0f, 1f, 0f, 0.2f);
+        Gizmos.DrawWireSphere(transform.position, patrolRadius);
+
+        // Ligne vers joueur
         if (player != null && !isDead)
         {
             float dist = Vector3.Distance(transform.position, player.position);
-
             if (dist <= detectionRange)
             {
-                Gizmos.color = dist <= attackRange ? Color.red : Color.yellow;
-                Gizmos.DrawLine(transform.position + Vector3.up, player.position + Vector3.up);
+                Gizmos.color = canSeePlayer ? Color.red : Color.gray;
+                Gizmos.DrawLine(transform.position + Vector3.up * 1.5f, player.position + Vector3.up);
             }
         }
+
+        // Dernière position connue du joueur
+        if (Application.isPlaying && currentState == ZombieState.Returning)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(lastKnownPlayerPos, 0.3f);
+        }
     }
-
-
 }
