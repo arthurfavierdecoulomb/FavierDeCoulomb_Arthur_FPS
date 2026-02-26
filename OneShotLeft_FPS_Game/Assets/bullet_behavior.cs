@@ -26,7 +26,6 @@ public class Bullet : MonoBehaviour
         {
             rb.linearVelocity = transform.forward * launchForce;
         }
-        transform.localScale = Vector3.one * bulletScale;
     }
 
     void Update()
