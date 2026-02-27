@@ -1060,7 +1060,7 @@ Transform:
   m_GameObject: {fileID: 306372089}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -60.5, z: 0}
   m_LocalScale: {x: 5752.4854, y: 0.1, z: 7735.16}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3722,7 +3722,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -3889,13 +3889,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b74e74b30a72a745a7c3627c5ff41a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
-  floorPrefab: {fileID: 1126065126}
-  wallLongPrefab: {fileID: 1126065120}
-  wallDoorFramePrefab: {fileID: 1126065122}
-  wallDoubleDoorFramePrefab: {fileID: 1126065121}
-  doorWoodPrefab: {fileID: 1839725702}
-  doorGlassPrefab: {fileID: 1052164326}
-  cornerLargePrefab: {fileID: 1126065125}
+  floorPrefab: {fileID: 487412180501535908, guid: 136cadafa90b88045963b1067640eeaf, type: 3}
+  wallLongPrefab: {fileID: 7744500492132486055, guid: 8be9758bb1121864ca7f1da9dc723e8a, type: 3}
+  wallDoorFramePrefab: {fileID: 2348291312628913201, guid: d8af50af23973b047b3886e2ded97851, type: 3}
+  wallDoubleDoorFramePrefab: {fileID: 7011748510680617258, guid: 613cd572dffe39e4f80ba54f025f66d7, type: 3}
+  doorWoodPrefab: {fileID: 1633178741808486901, guid: 879f1aef63c098d44b9fea098d16897a, type: 3}
+  doorGlassPrefab: {fileID: 552323683693882145, guid: d7e5ec292ad22ba4db7ced1df97a2f07, type: 3}
+  cornerLargePrefab: {fileID: 1298946017473176364, guid: 6103457d43dc3d946abca9f17390c349, type: 3}
   floorScale: {x: 2.67, y: 2.67, z: 2.67}
   wallScale: {x: 3, y: 3, z: 3}
   doorScale: {x: 1, y: 1, z: 1}
