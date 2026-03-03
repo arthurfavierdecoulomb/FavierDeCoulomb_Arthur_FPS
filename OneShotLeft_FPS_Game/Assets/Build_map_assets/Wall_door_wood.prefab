@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6658168421161354129}
   - component: {fileID: 5850379923942985588}
+  - component: {fileID: 1556126331140831309}
   m_Layer: 0
   m_Name: Door_rotation_wood
   m_TagString: Untagged
@@ -54,6 +55,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.34951782, y: 6.160263, z: 3.021904}
   m_Center: {x: -0.008102417, y: 2.9272065, z: 1.5684547}
+--- !u!114 &1556126331140831309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052223578149038137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
+  openAngle: 90
+  openSpeed: 3
+  closeSpeed: 2
+  rotationAxis: {x: 0, y: 1, z: 0}
+  invertDirection: 0
+  closeDelay: 3
+  detectionDepth: 20
+  detectionWidth: 20
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!1 &2827011303740856304
 GameObject:
   m_ObjectHideFlags: 0
@@ -65,7 +88,6 @@ GameObject:
   - component: {fileID: 2545875698212697604}
   - component: {fileID: 142667569628209150}
   - component: {fileID: 1574649026198365723}
-  - component: {fileID: 1945877300235263529}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -145,26 +167,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1945877300235263529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2827011303740856304}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
-  openAngle: 90
-  openSpeed: 3
-  closeSpeed: 2
-  rotationAxis: {x: 0, y: 1, z: 0}
-  invertDirection: 0
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
 --- !u!1 &6268760146227141819
 GameObject:
   m_ObjectHideFlags: 0

@@ -98,6 +98,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8755864754058967248}
+  - component: {fileID: 8383474785079960712}
   m_Layer: 0
   m_Name: grosse_poubelle
   m_TagString: Untagged
@@ -128,6 +129,27 @@ Transform:
   - {fileID: 59911578148760518}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8383474785079960712
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3093829977852513333}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.146881, y: 3.874561, z: 6.9823112}
+  m_Center: {x: 8.675552, y: 1.4372805, z: 8.504683}
 --- !u!1 &3120749283797784916
 GameObject:
   m_ObjectHideFlags: 0

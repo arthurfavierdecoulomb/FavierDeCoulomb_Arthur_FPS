@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2376218027437121982}
   - component: {fileID: 8556293096874673569}
+  - component: {fileID: 8994355299846290957}
   m_Layer: 0
   m_Name: Glass_door_rotation
   m_TagString: Untagged
@@ -54,6 +55,26 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6505127, y: 5.8901935, z: 2.9100494}
   m_Center: {x: 0.07336426, y: 3.0252116, z: 1.4408722}
+--- !u!114 &8994355299846290957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6290791432618039897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
+  openDistance: 3
+  openAngle: 90
+  openSpeed: 3
+  closeSpeed: 2
+  rotationAxis: {x: 0, y: 1, z: 0}
+  invertDirection: 0
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!1 &7356331897866542184
 GameObject:
   m_ObjectHideFlags: 0

@@ -196,15 +196,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieEnemy
   animator: {fileID: 1149603223917602004}
-  player: {fileID: 0}
+  player: {fileID: 4024645574935084025, guid: ce577169f63377144995952b7622fc30, type: 3}
   maxHealth: 100
   attackRange: 5
-  detectionRange: 20
   attackCooldown: 1
   attackDamage: 20
+  detectionRange: 20
+  hearingRange: 6
+  losePlayerTime: 4
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 0
   walkSpeed: 20
   runSpeed: 40
-  timeBeforeDestroy: 5
+  rotateSpeed: 5
   patrolRadius: 10
   patrolWaitMin: 2
   patrolWaitMax: 5
+  patrolSamples: 5
+  timeBeforeDestroy: 5

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4821582627101659735}
   - component: {fileID: 3325577022934118111}
+  - component: {fileID: 3509406690203330581}
   m_Layer: 0
   m_Name: Door_rotation_wood_left
   m_TagString: Untagged
@@ -54,6 +55,26 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.34951782, y: 6.160263, z: 3.021904}
   m_Center: {x: -0.008102417, y: 2.9272065, z: 1.5684547}
+--- !u!114 &3509406690203330581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4851017150881520737}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
+  openDistance: 3
+  openAngle: 90
+  openSpeed: 3
+  closeSpeed: 2
+  rotationAxis: {x: 0, y: 1, z: 0}
+  invertDirection: 1
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!1 &5352636733962130868
 GameObject:
   m_ObjectHideFlags: 0
@@ -65,7 +86,6 @@ GameObject:
   - component: {fileID: 1994536945730897908}
   - component: {fileID: 6087143639068866413}
   - component: {fileID: 1448386728458145822}
-  - component: {fileID: 2650036195197393675}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -145,26 +165,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &2650036195197393675
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5352636733962130868}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
-  openAngle: 90
-  openSpeed: 3
-  closeSpeed: 2
-  rotationAxis: {x: 0, y: 1, z: 0}
-  invertDirection: 0
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
 --- !u!1 &6715216358354227801
 GameObject:
   m_ObjectHideFlags: 0
@@ -176,7 +176,6 @@ GameObject:
   - component: {fileID: 2720101785618914822}
   - component: {fileID: 6390887758713562523}
   - component: {fileID: 4149241823511310574}
-  - component: {fileID: 3318648098453844987}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -256,26 +255,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &3318648098453844987
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6715216358354227801}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
-  openAngle: 90
-  openSpeed: 3
-  closeSpeed: 2
-  rotationAxis: {x: 0, y: 1, z: 0}
-  invertDirection: 0
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
 --- !u!1 &7349358788965040065
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,6 +265,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3229371034602221024}
   - component: {fileID: 133758406908054146}
+  - component: {fileID: 2868200199867280576}
   m_Layer: 0
   m_Name: Door_rotation_wood-right
   m_TagString: Untagged
@@ -330,6 +310,26 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.34951782, y: 6.160263, z: 3.021904}
   m_Center: {x: -0.008102417, y: 2.9272065, z: 1.5684547}
+--- !u!114 &2868200199867280576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7349358788965040065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
+  openDistance: 3
+  openAngle: 90
+  openSpeed: 3
+  closeSpeed: 2
+  rotationAxis: {x: 0, y: 1, z: 0}
+  invertDirection: 0
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!1 &8043789037430581704
 GameObject:
   m_ObjectHideFlags: 0
