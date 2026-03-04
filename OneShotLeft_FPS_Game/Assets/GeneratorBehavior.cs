@@ -111,6 +111,7 @@ public class MapGenerator : MonoBehaviour
         BuildGeometry();
         BakeNavMeshIfPresent();
         yield return new WaitForSeconds(0.35f);
+        SpawnDecoration();
         SpawnEnemies();
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
@@ -270,6 +271,21 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    // Retourne true si la tile est trop proche d'un couloir ou d'une entrée (à exclure pour la déco)
+    bool IsTileNearCorridor(int x, int y, int radius = 1)
+    {
+        for (int dx = -radius; dx <= radius; dx++)
+            for (int dy = -radius; dy <= radius; dy++)
+                if (IsCorridor(x + dx, y + dy)) return true;
+        return false;
+    }
+
+    // Retourne true si la tile est collée à un mur (bord de pièce)
+    bool IsTileAgainstWall(int x, int y)
+    {
+        return IsEmpty(x + 1, y) || IsEmpty(x - 1, y) || IsEmpty(x, y + 1) || IsEmpty(x, y - 1);
+    }
+
     void SpawnDecoration()
     {
         var validPrefabs = new List<GameObject>();
@@ -281,20 +297,47 @@ public class MapGenerator : MonoBehaviour
 
         GameObject decoParent = new GameObject("Decoration");
         decoParent.transform.parent = mapParent.transform;
+
+        // Tiles déjà occupées par une déco (évite les superpositions)
+        var usedTiles = new HashSet<Vector2Int>();
         int total = 0;
 
         for (int i = 1; i < rooms.Count; i++)
         {
             RectInt room = rooms[i];
             if (room.width <= 2 || room.height <= 2) continue;
-            for (int d = 0; d < decoPerRoom; d++)
+
+            // Priorité 1 : contre un mur ET loin des couloirs (idéal)
+            var candidates = new List<Vector2Int>();
+            for (int x = room.x + 1; x < room.x + room.width - 1; x++)
+                for (int y = room.y + 1; y < room.y + room.height - 1; y++)
+                    if (IsTileAgainstWall(x, y) && !IsTileNearCorridor(x, y, 2) && !usedTiles.Contains(new Vector2Int(x, y)))
+                        candidates.Add(new Vector2Int(x, y));
+
+            // Priorité 2 (fallback) : n'importe quelle tile intérieure loin des couloirs
+            if (candidates.Count < decoPerRoom)
             {
-                int rx = Random.Range(room.x + 1, room.x + room.width - 1);
-                int ry = Random.Range(room.y + 1, room.y + room.height - 1);
-                Vector3 pos = GridToWorld(rx, ry);
+                for (int x = room.x + 1; x < room.x + room.width - 1; x++)
+                    for (int y = room.y + 1; y < room.y + room.height - 1; y++)
+                    {
+                        var t = new Vector2Int(x, y);
+                        if (!IsTileNearCorridor(x, y, 1) && !usedTiles.Contains(t) && !candidates.Contains(t))
+                            candidates.Add(t);
+                    }
+            }
+
+            // Mélange et place jusqu'à decoPerRoom objets
+            for (int d = 0; d < decoPerRoom && candidates.Count > 0; d++)
+            {
+                int idx = Random.Range(0, candidates.Count);
+                Vector2Int tile = candidates[idx];
+                candidates.RemoveAt(idx);
+                usedTiles.Add(tile);
+
+                Vector3 pos = GridToWorld(tile.x, tile.y);
                 pos.y = floorYOffset + decoYOffset;
-                Quaternion r = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
-                Instantiate(validPrefabs[Random.Range(0, validPrefabs.Count)], pos, r, decoParent.transform);
+                Quaternion rot = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
+                Instantiate(validPrefabs[Random.Range(0, validPrefabs.Count)], pos, rot, decoParent.transform);
                 total++;
             }
         }
