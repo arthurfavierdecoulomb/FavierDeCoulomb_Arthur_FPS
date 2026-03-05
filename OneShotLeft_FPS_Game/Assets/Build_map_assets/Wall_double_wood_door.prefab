@@ -67,12 +67,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
   openAngle: 90
   openSpeed: 3
   closeSpeed: 2
   rotationAxis: {x: 0, y: 1, z: 0}
   invertDirection: 1
+  closeDelay: 1.5
+  detectionDepth: 2.5
+  detectionWidth: 2
   openSound: {fileID: 0}
   closeSound: {fileID: 0}
 --- !u!1 &5352636733962130868
@@ -86,6 +88,7 @@ GameObject:
   - component: {fileID: 1994536945730897908}
   - component: {fileID: 6087143639068866413}
   - component: {fileID: 1448386728458145822}
+  - component: {fileID: 3533059360249712194}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -165,6 +168,27 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3533059360249712194
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5352636733962130868}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.23287877, y: 1.9892966, z: 0.9778281}
+  m_Center: {x: -0.0000076293945, y: 0, z: 0.0000019073486}
 --- !u!1 &6715216358354227801
 GameObject:
   m_ObjectHideFlags: 0
@@ -176,6 +200,7 @@ GameObject:
   - component: {fileID: 2720101785618914822}
   - component: {fileID: 6390887758713562523}
   - component: {fileID: 4149241823511310574}
+  - component: {fileID: 6857648358708011365}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -255,6 +280,27 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &6857648358708011365
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6715216358354227801}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
+  m_Center: {x: 0.0000076293945, y: 0, z: 0}
 --- !u!1 &7349358788965040065
 GameObject:
   m_ObjectHideFlags: 0
@@ -322,12 +368,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901c19a246345db4499f0222b9303215, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorRotate
-  openDistance: 3
   openAngle: 90
   openSpeed: 3
   closeSpeed: 2
   rotationAxis: {x: 0, y: 1, z: 0}
   invertDirection: 0
+  closeDelay: 1.5
+  detectionDepth: 2.5
+  detectionWidth: 2
   openSound: {fileID: 0}
   closeSound: {fileID: 0}
 --- !u!1 &8043789037430581704

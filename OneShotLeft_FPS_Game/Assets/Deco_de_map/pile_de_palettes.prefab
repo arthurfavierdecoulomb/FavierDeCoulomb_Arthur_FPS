@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8894558883718122499}
   - component: {fileID: 4479706869155596906}
   - component: {fileID: 4332139318148934165}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   - component: {fileID: 5615401819824561425}
   - component: {fileID: 6537834969303405249}
   - component: {fileID: 2587921145267381480}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -189,7 +189,7 @@ GameObject:
   - component: {fileID: 7983375501611619169}
   - component: {fileID: 2260955747853848338}
   - component: {fileID: 3488122270135752462}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -278,7 +278,7 @@ GameObject:
   - component: {fileID: 7988501824228804185}
   - component: {fileID: 889041415991900355}
   - component: {fileID: 1619874728700373731}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -367,7 +367,7 @@ GameObject:
   - component: {fileID: 4630422966060021658}
   - component: {fileID: 6630566335878752738}
   - component: {fileID: 1236259927041625026}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -456,7 +456,7 @@ GameObject:
   - component: {fileID: 598412166218625233}
   - component: {fileID: 2034494192963953879}
   - component: {fileID: 1367395215304683778}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -544,7 +544,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2425803556785955562}
   - component: {fileID: 5999908235582265151}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: pile_de_palettes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -606,7 +606,7 @@ GameObject:
   - component: {fileID: 6793462681289619841}
   - component: {fileID: 9136274734153137444}
   - component: {fileID: 1504427386365136976}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -695,7 +695,7 @@ GameObject:
   - component: {fileID: 3265340630590338662}
   - component: {fileID: 8072436092576434848}
   - component: {fileID: 7017893770801333503}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: palette
   m_TagString: Untagged
   m_Icon: {fileID: 0}

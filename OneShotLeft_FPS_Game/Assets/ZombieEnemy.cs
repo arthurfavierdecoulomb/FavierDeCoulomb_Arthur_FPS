@@ -80,6 +80,8 @@ public class ZombieEnemy : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         if (agent == null) { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
 
+
+
         agent.speed = walkSpeed;
         agent.stoppingDistance = attackRange * 0.8f;
         agent.angularSpeed = 0f; // On gère la rotation manuellement pour plus de fluidité
@@ -94,6 +96,7 @@ public class ZombieEnemy : MonoBehaviour
             {
                 player = playerObj.transform;
                 playerHealth = playerObj.GetComponentInChildren<PlayerHealth>();
+                Debug.Log(name + " trouve le joueur automatiquement : " + player.name);
             }
             else Debug.LogWarning("Aucun joueur avec le tag 'Player' !");
         }
@@ -101,6 +104,10 @@ public class ZombieEnemy : MonoBehaviour
         {
             playerHealth = player.GetComponentInChildren<PlayerHealth>();
         }
+
+
+
+
     }
 
     // =============================================

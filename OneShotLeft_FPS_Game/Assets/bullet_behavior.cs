@@ -4,7 +4,7 @@ public class Bullet : MonoBehaviour
 {
     [Header("Physics")]
     [SerializeField] private float launchForce = 20f;
-    [SerializeField] private float damage = 25f;
+    [SerializeField] private float damage = 9999f;  // one shot
 
     [Header("Pickup")]
     [SerializeField] private float pickupRadius = 1.5f;
@@ -20,27 +20,20 @@ public class Bullet : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-
-        // Lance la balle vers l'avant
         if (rb != null)
-        {
             rb.linearVelocity = transform.forward * launchForce;
-        }
     }
 
     void Update()
     {
-        // Vérifie si le joueur est proche pour récupérer la balle
-        Collider[] colliders = Physics.OverlapSphere(transform.position, pickupRadius, playerLayer);
+        if (hasHit) return;
 
+        // Récupération de la balle par le joueur
+        Collider[] colliders = Physics.OverlapSphere(transform.position, pickupRadius, playerLayer);
         if (colliders.Length > 0)
         {
-            // Récupération de la balle
-            if (weaponController != null)
-            {
-                weaponController.ReloadBullet();
-                Debug.Log("Balle recuperee");
-            }
+            weaponController?.ReloadBullet();
+            Debug.Log("Balle recuperee");
             Destroy(gameObject);
         }
     }
@@ -48,8 +41,24 @@ public class Bullet : MonoBehaviour
     void OnCollisionEnter(Collision collision)
     {
         if (hasHit) return;
-        Debug.Log("Balle a touche: " + collision.gameObject.name);
+        hasHit = true;
 
+        Debug.Log("Balle a touche : " + collision.gameObject.name);
+
+        // Cherche le ZombieEnemy sur le GO touché ou ses parents
+        ZombieEnemy zombie = collision.gameObject.GetComponentInParent<ZombieEnemy>();
+        if (zombie != null)
+        {
+            zombie.TakeDamage((int)damage);    // one shot
+            // La balle continue de tomber pour être récupérée
+        }
+
+        // Pas un zombie : la balle reste au sol pour être récupérée
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
     }
 
     public void SetWeaponController(WeaponController controller)
@@ -59,7 +68,6 @@ public class Bullet : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        // Visualise la zone de pickup
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, pickupRadius);
     }

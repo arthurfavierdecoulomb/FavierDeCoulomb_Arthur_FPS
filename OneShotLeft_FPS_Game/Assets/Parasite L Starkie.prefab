@@ -196,7 +196,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieEnemy
   animator: {fileID: 1149603223917602004}
-  player: {fileID: 4024645574935084025, guid: ce577169f63377144995952b7622fc30, type: 3}
+  player: {fileID: 0}
   maxHealth: 100
   attackRange: 5
   attackCooldown: 1
@@ -206,7 +206,7 @@ MonoBehaviour:
   losePlayerTime: 4
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   walkSpeed: 20
   runSpeed: 40
   rotateSpeed: 5

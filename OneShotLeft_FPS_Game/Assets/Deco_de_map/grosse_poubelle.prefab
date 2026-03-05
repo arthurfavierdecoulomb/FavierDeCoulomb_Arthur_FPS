@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8144678378478287424}
   - component: {fileID: 752055462176156973}
   - component: {fileID: 2162664234283116691}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder003 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -99,7 +99,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8755864754058967248}
   - component: {fileID: 8383474785079960712}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: grosse_poubelle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -161,7 +161,7 @@ GameObject:
   - component: {fileID: 1480898634454398770}
   - component: {fileID: 7897370368505996444}
   - component: {fileID: 8044912316585575809}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Box002 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -250,7 +250,7 @@ GameObject:
   - component: {fileID: 59911578148760518}
   - component: {fileID: 8257880916782620034}
   - component: {fileID: 3816449154317790794}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder007 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -339,7 +339,7 @@ GameObject:
   - component: {fileID: 1363857916752889273}
   - component: {fileID: 5666971070362871802}
   - component: {fileID: 1755347635453883680}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Object001 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -428,7 +428,7 @@ GameObject:
   - component: {fileID: 4124062178752433335}
   - component: {fileID: 585065022388953609}
   - component: {fileID: 6396289054669298842}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder004 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -517,7 +517,7 @@ GameObject:
   - component: {fileID: 6867657463067900396}
   - component: {fileID: 5867334433479353904}
   - component: {fileID: 289329715019684130}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder005 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -606,7 +606,7 @@ GameObject:
   - component: {fileID: 5382156314603537916}
   - component: {fileID: 3264401145706036596}
   - component: {fileID: 2795459272895559781}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Box003 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -695,7 +695,7 @@ GameObject:
   - component: {fileID: 7326605294826471084}
   - component: {fileID: 7471878402473084989}
   - component: {fileID: 5752675905731436233}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder006 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

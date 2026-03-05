@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6033217888641960670}
   - component: {fileID: 4706504434388162230}
   - component: {fileID: 5793811487283953585}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder001 (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +125,7 @@ GameObject:
   - component: {fileID: 4854729059987503562}
   - component: {fileID: 2696467866879194759}
   - component: {fileID: 7517195231642238192}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder008 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -235,7 +235,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7913191660430615827}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: tonneaux
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -272,7 +272,7 @@ GameObject:
   - component: {fileID: 5718056143432642702}
   - component: {fileID: 7433574956232560456}
   - component: {fileID: 3618970317416500074}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder001 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
