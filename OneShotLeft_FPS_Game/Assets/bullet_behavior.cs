@@ -1,5 +1,7 @@
 using UnityEngine;
 
+using UnityEngine;
+
 public class Bullet : MonoBehaviour
 {
     [Header("Physics")]
@@ -26,9 +28,7 @@ public class Bullet : MonoBehaviour
 
     void Update()
     {
-        if (hasHit) return;
-
-        // Récupération de la balle par le joueur
+        // Le pickup fonctionne toujours, que la balle ait touché quelque chose ou non
         Collider[] colliders = Physics.OverlapSphere(transform.position, pickupRadius, playerLayer);
         if (colliders.Length > 0)
         {
