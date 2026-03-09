@@ -1,35 +1,29 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// Porte à rotation automatique avec détection par zone (Collider Trigger).
-/// S'ouvre quand le joueur entre dans la zone, se referme quand il en sort.
-///
-/// SETUP :
-/// 1. Attache ce script sur le GameObject pivot de la porte (le gond).
-///    Si le pivot n'est pas au bord, crée un GameObject vide à la position du gond,
-///    mets la porte en enfant, et attache ce script sur le parent vide.
-/// 2. Ajoute un Collider (BoxCollider ou SphereCollider) sur ce même GameObject.
-///    → Coche "Is Trigger" dans l'Inspector.
-/// 3. Assure-toi que le joueur a le tag "Player" ET un Rigidbody (requis pour OnTrigger).
-/// 4. Règle les paramètres dans l'Inspector.
-/// </summary>
 [RequireComponent(typeof(Collider))]
 public class DoorZone : MonoBehaviour
 {
     [Header("Rotation")]
-    [SerializeField] private float openAngle = 90f;       // Angle d'ouverture
-    [SerializeField] private float openSpeed = 3f;        // Vitesse d'ouverture  (degrés/s × 60)
-    [SerializeField] private float closeSpeed = 2f;        // Vitesse de fermeture
-    [SerializeField] private Vector3 rotationAxis = Vector3.up; // Axe de rotation (Y = vertical)
-    [SerializeField] private bool invertDirection = false;   // Inverse le sens d'ouverture
+    [SerializeField] private float openAngle = 90f;
+    [SerializeField] private float openSpeed = 3f;
+    [SerializeField] private float closeSpeed = 2f;
+    [SerializeField] private Vector3 rotationAxis = Vector3.up;
+    [SerializeField] private bool invertDirection = false;
 
     [Header("Comportement")]
-    [Tooltip("Délai en secondes avant que la porte se referme après que le joueur soit sorti.")]
+    [Tooltip("Délai en secondes avant que la porte se referme après que le déclencheur soit sorti.")]
     [SerializeField] private float closeDelay = 1.5f;
 
-    [Tooltip("Distance devant/derrière la porte où le joueur est détecté (crée la zone auto si aucun Collider configuré).")]
-    [SerializeField] private float detectionDepth = 2.5f;   // profondeur de la zone de chaque côté
-    [SerializeField] private float detectionWidth = 2f;     // largeur de la zone (axe X de la porte)
+    [Tooltip("Distance devant/derrière la porte où le joueur/zombie est détecté.")]
+    [SerializeField] private float detectionDepth = 2.5f;
+    [SerializeField] private float detectionWidth = 2f;
+
+    [Header("Zombies")]
+    [Tooltip("Les zombies peuvent ouvrir la porte en passant dedans.")]
+    [SerializeField] private bool zombiesCanOpen = true;
+
+    [Tooltip("Tag utilisé sur les zombies (doit correspondre à celui de tes prefabs).")]
+    [SerializeField] private string zombieTag = "Zombie";
 
     [Header("Sons (optionnel)")]
     [SerializeField] private AudioClip openSound;
@@ -43,7 +37,7 @@ public class DoorZone : MonoBehaviour
     // État
     private bool isOpen = false;
     private bool isMoving = false;
-    private int playersInZone = 0;     // compteur (plusieurs joueurs possibles)
+    private int inZoneCount = 0;   // joueurs + zombies dans la zone
     private float closeTimer = -1f;
 
     // ─────────────────────────────────────────────
@@ -51,12 +45,10 @@ public class DoorZone : MonoBehaviour
     {
         Init();
 
-        // Configure automatiquement le BoxCollider pour qu'il dépasse des deux côtés
         BoxCollider box = GetComponent<BoxCollider>();
         if (box != null)
         {
             box.isTrigger = true;
-            // La zone s'étend devant ET derrière la porte (axe Z local = direction de passage)
             box.size = new Vector3(detectionWidth, box.size.y > 0 ? box.size.y : 2f, detectionDepth * 2f);
             box.center = Vector3.zero;
         }
@@ -67,7 +59,6 @@ public class DoorZone : MonoBehaviour
         }
     }
 
-    /// Appelé par un générateur de map pour initialiser depuis le code
     public void SetupFromGenerator(float angle, float openSpd, float closeSpd, float delay = 0f)
     {
         openAngle = angle;
@@ -91,15 +82,12 @@ public class DoorZone : MonoBehaviour
     // ─────────────────────────────────────────────
     void Update()
     {
-        // Gestion du délai de fermeture
         if (closeTimer >= 0f)
         {
             closeTimer -= Time.deltaTime;
-            if (closeTimer < 0f)
-                Close();
+            if (closeTimer < 0f) Close();
         }
 
-        // Animation
         if (!isMoving) return;
 
         Quaternion target = isOpen ? openRotation : closedRotation;
@@ -119,28 +107,33 @@ public class DoorZone : MonoBehaviour
     // ─────────────────────────────────────────────
     void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowed(other)) return;
 
-        playersInZone++;
-        closeTimer = -1f;   // annule un éventuel délai de fermeture en cours
+        inZoneCount++;
+        closeTimer = -1f;
 
-        if (!isOpen)
-            Open();
+        if (!isOpen) Open();
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowed(other)) return;
 
-        playersInZone = Mathf.Max(0, playersInZone - 1);
+        inZoneCount = Mathf.Max(0, inZoneCount - 1);
 
-        if (playersInZone == 0)
+        if (inZoneCount == 0)
         {
-            if (closeDelay > 0f)
-                closeTimer = closeDelay;    // fermeture différée
-            else
-                Close();
+            if (closeDelay > 0f) closeTimer = closeDelay;
+            else Close();
         }
+    }
+
+    // ─── Vérifie si le collider est autorisé à ouvrir la porte ───────────
+    bool IsAllowed(Collider other)
+    {
+        if (other.CompareTag("Player")) return true;
+        if (zombiesCanOpen && other.CompareTag(zombieTag)) return true;
+        return false;
     }
 
     // ─────────────────────────────────────────────
@@ -168,7 +161,6 @@ public class DoorZone : MonoBehaviour
     // ─────────────────────────────────────────────
     void OnDrawGizmosSelected()
     {
-        // Visualise la zone trigger dans la scène
         Collider col = GetComponent<Collider>();
         if (col == null) return;
 
@@ -188,12 +180,9 @@ public class DoorZone : MonoBehaviour
         }
         else if (col is SphereCollider sphere)
         {
-            Gizmos.DrawSphere(transform.TransformPoint(sphere.center),
-                              sphere.radius * Mathf.Max(transform.lossyScale.x,
-                                                        transform.lossyScale.z));
-            Gizmos.DrawWireSphere(transform.TransformPoint(sphere.center),
-                                  sphere.radius * Mathf.Max(transform.lossyScale.x,
-                                                            transform.lossyScale.z));
+            float r = sphere.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z);
+            Gizmos.DrawSphere(transform.TransformPoint(sphere.center), r);
+            Gizmos.DrawWireSphere(transform.TransformPoint(sphere.center), r);
         }
     }
 }

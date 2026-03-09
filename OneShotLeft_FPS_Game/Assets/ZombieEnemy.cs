@@ -1,35 +1,35 @@
-using System.Collections;
-using System.Security.Cryptography;
+ï»¿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// IA Zombie intelligente :
-/// - Patrouille via NavMesh (reste dans les pièces/couloirs)
-/// - Poursuite par pathfinding (contourne les murs, traverse les portes)
-/// - Détection par ligne de vue ET distance
-/// - Perd le joueur si hors de vue trop longtemps
-/// - Retourne à sa pièce d'origine après avoir perdu la trace
+/// Zombie compatible avec le WaveManager.
+/// - ReÃ§oit ses stats (vitesse, vague) via ZombieStats.Init()
+/// - Notifie sa mort via ZombieDeathNotifier (utilisÃ© par le WaveManager)
+/// - Conserve toute la logique IA : patrouille, perception, poursuite, attaque, retour
+/// - IntÃ¨gre un NavMeshGuard : replace automatiquement le zombie sur le NavMesh
+///   s'il en sort (ex: passage par une porte sans NavMesh en dessous)
 /// </summary>
 public class ZombieEnemy : MonoBehaviour
 {
-    [Header("Références")]
+    [Header("RÃ©fÃ©rences")]
     public Animator animator;
     public Transform player;
     private NavMeshAgent agent;
     private PlayerHealth playerHealth;
+    private ZombieStats stats;
 
-    [Header("Paramètres de combat")]
+    [Header("ParamÃ¨tres de combat")]
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private float attackRange = 2f;
     [SerializeField] private float attackCooldown = 2f;
     [SerializeField] private int attackDamage = 10;
 
-    [Header("Détection")]
-    [SerializeField] private float detectionRange = 12f;  // Distance de détection directe
-    [SerializeField] private float hearingRange = 6f;   // Distance d'alerte sans ligne de vue
-    [SerializeField] private float losePlayerTime = 4f;   // Secondes avant de perdre le joueur
-    [SerializeField] private LayerMask obstacleMask;         // Layers qui bloquent la vue (murs, etc.)
+    [Header("DÃ©tection")]
+    [SerializeField] private float detectionRange = 12f;
+    [SerializeField] private float hearingRange = 6f;
+    [SerializeField] private float losePlayerTime = 4f;
+    [SerializeField] private LayerMask obstacleMask;
 
     [Header("Mouvement")]
     [SerializeField] private float walkSpeed = 1.5f;
@@ -37,72 +37,102 @@ public class ZombieEnemy : MonoBehaviour
     [SerializeField] private float rotateSpeed = 5f;
 
     [Header("Patrouille NavMesh")]
-    [SerializeField] private float patrolRadius = 8f;   // Rayon de recherche de destination
+    [SerializeField] private float patrolRadius = 8f;
     [SerializeField] private float patrolWaitMin = 2f;
     [SerializeField] private float patrolWaitMax = 5f;
-    [SerializeField] private int patrolSamples = 5;    // Tentatives pour trouver un point valide
+    [SerializeField] private int patrolSamples = 5;
 
     [Header("Mort")]
     [SerializeField] private float timeBeforeDestroy = 5f;
 
-    // Paramètres Animator
+    [Header("SÃ©curitÃ© NavMesh")]
+    [Tooltip("Rayon de recherche du point NavMesh le plus proche si hors NavMesh")]
+    [SerializeField] private float snapRadius = 8f;
+    [Tooltip("FrÃ©quence de vÃ©rification hors NavMesh (secondes)")]
+    [SerializeField] private float navCheckInterval = 0.4f;
+    [Tooltip("DurÃ©e max sur un OffMeshLink avant force-complÃ©tion (secondes)")]
+    [SerializeField] private float maxLinkTime = 2f;
+    [Tooltip("DÃ©lai de grÃ¢ce aprÃ¨s le spawn â€” le guard n'est pas actif pendant ce temps")]
+    [SerializeField] private float snapGraceDelay = 2f;
+
+    // ParamÃ¨tres Animator
     private const string PARAM_IS_RUNNING = "IsRunning";
     private const string PARAM_ATTACK = "Attack";
     private const string PARAM_DEATH = "Death";
 
-    // État interne
+    // Ã‰tat interne
     private int currentHealth;
     private bool isDead = false;
     private float lastAttackTime = 0f;
     private float losePlayerTimer = 0f;
     private bool canSeePlayer = false;
     private Vector3 lastKnownPlayerPos;
-    private Vector3 spawnPosition;  // Position de spawn pour retour si perd le joueur
+    private Vector3 spawnPosition;
 
     // Patrouille
     private float patrolWaitTimer = 0f;
     private float patrolWaitDuration = 0f;
     private bool isWaitingAtPoint = true;
 
-    public enum ZombieState { Idle, Patrolling, Suspicious, Chasing, Attacking, Returning, Dead }
+    // NavMesh Guard
+    private float _navCheckTimer = 0f;
+    private float _onLinkTimer = 0f;
+    private float _graceTimer = 0f;
+    private Vector3 _lastValidPos;
+
+    public enum ZombieState { Idle, Patrolling, Chasing, Attacking, Returning, Dead }
     private ZombieState currentState = ZombieState.Idle;
 
     // =============================================
+    void Awake()
+    {
+        stats = GetComponent<ZombieStats>();
+    }
+
     void Start()
     {
         currentHealth = maxHealth;
         spawnPosition = transform.position;
+        _lastValidPos = transform.position;
+
+        ApplyWaveStats();
         InitComponents();
         SetState(ZombieState.Idle);
+    }
+
+    void ApplyWaveStats()
+    {
+        if (stats == null) return;
+        runSpeed = stats.moveSpeed;
+        walkSpeed = stats.moveSpeed * 0.45f;
+        Debug.Log($"{name} â€” Vague {stats.wave} | run : {runSpeed:F1} | walk : {walkSpeed:F1}");
     }
 
     void InitComponents()
     {
         agent = GetComponent<NavMeshAgent>();
-        if (agent == null) { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
+        if (agent == null)
+        { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
 
         agent.speed = walkSpeed;
         agent.stoppingDistance = attackRange * 0.8f;
         agent.angularSpeed = 0f;
 
         if (animator == null) animator = GetComponent<Animator>();
-        if (animator == null) { Debug.LogError("Animator manquant sur " + name); enabled = false; return; }
+        if (animator == null)
+        { Debug.LogError("Animator manquant sur " + name); enabled = false; return; }
 
-        // Tente de trouver le joueur au Start — si inactif, on réessaiera dans Update
         TryFindPlayer();
     }
 
-    // Cherche le joueur (appelé au Start et dans Update si pas encore trouvé)
     void TryFindPlayer()
     {
-        if (player != null) return; // déjà trouvé
-
+        if (player != null) return;
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
             player = playerObj.transform;
             playerHealth = playerObj.GetComponentInChildren<PlayerHealth>();
-            Debug.Log(name + " a trouvé le joueur : " + player.name);
         }
     }
 
@@ -110,16 +140,97 @@ public class ZombieEnemy : MonoBehaviour
     void Update()
     {
         if (isDead) return;
+        if (player == null) { TryFindPlayer(); return; }
 
-        // Tant que le joueur n'est pas trouvé, on réessaie chaque frame
-        if (player == null)
-        {
-            TryFindPlayer();
-            return; // on attend d'avoir le joueur avant de faire quoi que ce soit
-        }
-
+        UpdateNavMeshGuard();
         UpdatePerception();
         UpdateStateMachine();
+    }
+
+    // =============================================
+    // NAVMESH GUARD
+    // =============================================
+    void UpdateNavMeshGuard()
+    {
+        if (agent == null || !agent.enabled) return;
+
+        // DÃ©lai de grÃ¢ce aprÃ¨s le spawn â€” laisse le temps Ã  l'agent de s'initialiser
+        if (_graceTimer < snapGraceDelay)
+        {
+            _graceTimer += Time.deltaTime;
+            if (agent.isOnNavMesh) _lastValidPos = transform.position;
+            return;
+        }
+        if (agent.isOnOffMeshLink)
+        {
+            _onLinkTimer += Time.deltaTime;
+            if (_onLinkTimer >= maxLinkTime)
+            {
+                ForceCompleteOffMeshLink();
+                _onLinkTimer = 0f;
+            }
+            return;
+        }
+        _onLinkTimer = 0f;
+
+        // Sur le NavMesh : mÃ©morise la position valide
+        if (agent.isOnNavMesh)
+        {
+            _lastValidPos = transform.position;
+            return;
+        }
+
+        // Hors NavMesh : vÃ©rification pÃ©riodique
+        _navCheckTimer += Time.deltaTime;
+        if (_navCheckTimer >= navCheckInterval)
+        {
+            _navCheckTimer = 0f;
+            SnapToNavMesh();
+        }
+    }
+
+    void ForceCompleteOffMeshLink()
+    {
+        if (!agent.isOnOffMeshLink) return;
+
+        Vector3 endPos = agent.currentOffMeshLinkData.endPos;
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(endPos, out hit, snapRadius, NavMesh.AllAreas))
+        {
+            agent.CompleteOffMeshLink();
+            agent.Warp(hit.position);
+            _lastValidPos = hit.position;
+            Debug.Log($"[NavMeshGuard] {name} â€” OffMeshLink forcÃ© vers {hit.position}");
+        }
+    }
+
+    void SnapToNavMesh()
+    {
+        NavMeshHit hit;
+        bool found = NavMesh.SamplePosition(transform.position, out hit, snapRadius, NavMesh.AllAreas);
+        if (!found)
+            found = NavMesh.SamplePosition(_lastValidPos, out hit, snapRadius, NavMesh.AllAreas);
+
+        if (found)
+        {
+            agent.enabled = false;
+            transform.position = hit.position;
+            agent.enabled = true;
+            _lastValidPos = hit.position;
+
+            if (agent.hasPath)
+            {
+                Vector3 dest = agent.destination;
+                agent.ResetPath();
+                agent.SetDestination(dest);
+            }
+            Debug.Log($"[NavMeshGuard] {name} replacÃ© sur le NavMesh Ã  {hit.position}");
+        }
+        else
+        {
+            // Pas de NavMesh trouvÃ© â€” on log mais on ne tue pas
+            Debug.LogWarning($"[NavMeshGuard] {name} introuvable sur NavMesh dans {snapRadius}m â€” augmente snapRadius.");
+        }
     }
 
     // =============================================
@@ -131,22 +242,16 @@ public class ZombieEnemy : MonoBehaviour
 
         float dist = Vector3.Distance(transform.position, player.position);
 
-        // Ligne de vue : raycast vers le joueur
         bool lineOfSight = false;
         if (dist <= detectionRange)
         {
-            Vector3 dirToPlayer = (player.position - transform.position).normalized;
-            // On vise le torse du joueur
             Vector3 origin = transform.position + Vector3.up * 1.5f;
             Vector3 target = player.position + Vector3.up * 1.0f;
-
             if (!Physics.Linecast(origin, target, obstacleMask))
                 lineOfSight = true;
         }
 
-        // Entend le joueur même sans ligne de vue (très proche)
         bool hearsPlayer = dist <= hearingRange;
-
         canSeePlayer = lineOfSight || hearsPlayer;
 
         if (canSeePlayer)
@@ -161,11 +266,10 @@ public class ZombieEnemy : MonoBehaviour
     }
 
     // =============================================
-    // MACHINE D'ÉTATS
+    // MACHINE D'Ã‰TATS
     // =============================================
     void UpdateStateMachine()
     {
-        // Le joueur est mort ? retour à la patrouille
         if (playerHealth != null && playerHealth.GetHealth() <= 0)
         {
             if (currentState != ZombieState.Patrolling && currentState != ZombieState.Idle)
@@ -180,19 +284,18 @@ public class ZombieEnemy : MonoBehaviour
         {
             case ZombieState.Idle:
             case ZombieState.Patrolling:
-                if (canSeePlayer)
-                    SetState(ZombieState.Chasing);
+                if (canSeePlayer) SetState(ZombieState.Chasing);
                 break;
 
             case ZombieState.Chasing:
                 if (dist <= attackRange)
                     SetState(ZombieState.Attacking);
                 else if (!canSeePlayer && losePlayerTimer >= losePlayerTime)
-                    SetState(ZombieState.Returning); // Retourne à sa zone
+                    SetState(ZombieState.Returning);
                 break;
 
             case ZombieState.Attacking:
-                if (dist > attackRange * 1.3f) // Légère marge pour pas osciller
+                if (dist > attackRange * 1.3f)
                     SetState(ZombieState.Chasing);
                 else if (!canSeePlayer && losePlayerTimer >= losePlayerTime)
                     SetState(ZombieState.Returning);
@@ -202,7 +305,7 @@ public class ZombieEnemy : MonoBehaviour
                 if (canSeePlayer)
                     SetState(ZombieState.Chasing);
                 else if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
-                    SetState(ZombieState.Patrolling); // Arrivé à destination ? reprend patrouille
+                    SetState(ZombieState.Patrolling);
                 break;
         }
 
@@ -212,18 +315,8 @@ public class ZombieEnemy : MonoBehaviour
     void SetState(ZombieState newState)
     {
         if (newState == currentState) return;
-
-        // Nettoyage sortie état
-        switch (currentState)
-        {
-            case ZombieState.Chasing:
-            case ZombieState.Attacking:
-                break;
-        }
-
         currentState = newState;
 
-        // Init entrée état
         switch (newState)
         {
             case ZombieState.Idle:
@@ -238,7 +331,6 @@ public class ZombieEnemy : MonoBehaviour
             case ZombieState.Patrolling:
                 agent.speed = walkSpeed;
                 agent.isStopped = false;
-                // Cherche immédiatement une destination
                 TrySetPatrolDestination();
                 break;
 
@@ -259,7 +351,6 @@ public class ZombieEnemy : MonoBehaviour
                 agent.speed = walkSpeed;
                 agent.isStopped = false;
                 animator.SetBool(PARAM_IS_RUNNING, false);
-                // NavMesh trouve le chemin vers la dernière position connue puis vers le spawn
                 agent.SetDestination(lastKnownPlayerPos);
                 StartCoroutine(ReturnToSpawnAfterDelay(1.5f));
                 break;
@@ -277,28 +368,18 @@ public class ZombieEnemy : MonoBehaviour
     {
         switch (currentState)
         {
-            case ZombieState.Idle:
-                ExecuteIdle();
-                break;
-            case ZombieState.Patrolling:
-                ExecutePatrol();
-                break;
-            case ZombieState.Chasing:
-                ExecuteChase();
-                break;
-            case ZombieState.Attacking:
-                ExecuteAttack();
-                break;
+            case ZombieState.Idle: ExecuteIdle(); break;
+            case ZombieState.Patrolling: ExecutePatrol(); break;
+            case ZombieState.Chasing: ExecuteChase(); break;
+            case ZombieState.Attacking: ExecuteAttack(); break;
             case ZombieState.Returning:
-                // Le NavMesh gère le déplacement, on tourne juste vers la destination
-                if (agent.hasPath)
-                    SmoothRotateTowards(agent.steeringTarget);
+                if (agent.hasPath) SmoothRotateTowards(agent.steeringTarget);
                 break;
         }
     }
 
     // =============================================
-    // ÉTATS
+    // Ã‰TATS
     // =============================================
     void ExecuteIdle()
     {
@@ -311,7 +392,6 @@ public class ZombieEnemy : MonoBehaviour
     {
         if (isWaitingAtPoint)
         {
-            // Attend avant de bouger
             patrolWaitTimer += Time.deltaTime;
             if (patrolWaitTimer >= patrolWaitDuration)
             {
@@ -321,11 +401,8 @@ public class ZombieEnemy : MonoBehaviour
         }
         else
         {
-            // En déplacement vers un point de patrouille
-            if (agent.hasPath)
-                SmoothRotateTowards(agent.steeringTarget);
+            if (agent.hasPath) SmoothRotateTowards(agent.steeringTarget);
 
-            // Arrivé ?
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.2f)
             {
                 agent.isStopped = true;
@@ -339,23 +416,14 @@ public class ZombieEnemy : MonoBehaviour
 
     void ExecuteChase()
     {
-        // Met à jour la destination vers le joueur (via NavMesh ? contourne les murs)
-        if (canSeePlayer)
-            agent.SetDestination(player.position);
-        else
-            agent.SetDestination(lastKnownPlayerPos);
-
-        if (agent.hasPath)
-            SmoothRotateTowards(agent.steeringTarget);
-
+        agent.SetDestination(canSeePlayer ? player.position : lastKnownPlayerPos);
+        if (agent.hasPath) SmoothRotateTowards(agent.steeringTarget);
         animator.SetBool(PARAM_IS_RUNNING, true);
     }
 
     void ExecuteAttack()
     {
-        // Reste face au joueur pendant l'attaque
         SmoothRotateTowards(player.position);
-
         if (Time.time >= lastAttackTime + attackCooldown)
         {
             animator.ResetTrigger(PARAM_ATTACK);
@@ -369,17 +437,14 @@ public class ZombieEnemy : MonoBehaviour
     // =============================================
     void TrySetPatrolDestination()
     {
-        // Essaie plusieurs fois de trouver un point valide sur le NavMesh
         for (int i = 0; i < patrolSamples; i++)
         {
-            Vector3 randomDir = Random.insideUnitSphere * patrolRadius;
-            randomDir += transform.position;
+            Vector3 randomDir = Random.insideUnitSphere * patrolRadius + transform.position;
             randomDir.y = transform.position.y;
 
             NavMeshHit hit;
             if (NavMesh.SamplePosition(randomDir, out hit, patrolRadius, NavMesh.AllAreas))
             {
-                // Vérifie qu'un chemin complet existe (pas seulement un point proche)
                 NavMeshPath path = new NavMeshPath();
                 if (agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete)
                 {
@@ -391,8 +456,6 @@ public class ZombieEnemy : MonoBehaviour
                 }
             }
         }
-
-        // Aucun point valide trouvé ? reste en idle un moment
         SetState(ZombieState.Idle);
     }
 
@@ -401,44 +464,35 @@ public class ZombieEnemy : MonoBehaviour
     // =============================================
     void SmoothRotateTowards(Vector3 targetPos)
     {
-        Vector3 dir = (targetPos - transform.position);
+        Vector3 dir = targetPos - transform.position;
         dir.y = 0f;
         if (dir.sqrMagnitude < 0.001f) return;
-
-        Quaternion target = Quaternion.LookRotation(dir);
-        transform.rotation = Quaternion.Slerp(transform.rotation, target, rotateSpeed * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            Quaternion.LookRotation(dir),
+            rotateSpeed * Time.deltaTime
+        );
     }
 
     // =============================================
-    // DÉGÂTS & MORT
+    // DÃ‰GÃ‚TS & MORT
     // =============================================
-
-    /// <summary>
-    /// Appelé via Animation Event au moment de l'impact dans l'animation d'attaque
-    /// </summary>
     public void DealDamageToPlayer()
     {
         if (isDead || player == null || playerHealth == null) return;
-
         float dist = Vector3.Distance(transform.position, player.position);
         if (dist <= attackRange * 1.5f)
         {
             playerHealth.TakeDamage(attackDamage);
-            Debug.Log(name + " frappe le joueur ! -" + attackDamage + " HP");
+            Debug.Log($"{name} frappe le joueur ! -{attackDamage} HP");
         }
     }
 
-    /// <summary>
-    /// Appelé par les armes/projectiles pour blesser le zombie
-    /// </summary>
     public void TakeDamage(int damage)
     {
         if (isDead) return;
-
         currentHealth = Mathf.Clamp(currentHealth - damage, 0, maxHealth);
-        Debug.Log(name + " reçoit " + damage + " dégâts ? " + currentHealth + "/" + maxHealth);
 
-        // Alerte si touché sans voir le joueur
         if (!canSeePlayer && player != null)
         {
             lastKnownPlayerPos = player.position;
@@ -468,8 +522,11 @@ public class ZombieEnemy : MonoBehaviour
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null) rb.isKinematic = true;
 
+        ZombieDeathNotifier notifier = GetComponent<ZombieDeathNotifier>();
+        if (notifier != null) notifier.NotifyDeath();
+
         Destroy(gameObject, timeBeforeDestroy);
-        Debug.Log(name + " est mort.");
+        Debug.Log($"{name} est mort.");
     }
 
     // =============================================
@@ -485,23 +542,18 @@ public class ZombieEnemy : MonoBehaviour
     // =============================================
     void OnDrawGizmosSelected()
     {
-        // Attaque
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
 
-        // Détection visuelle
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
-        // Écoute
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, hearingRange);
 
-        // Rayon de patrouille
         Gizmos.color = new Color(0f, 1f, 0f, 0.2f);
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
 
-        // Ligne vers joueur
         if (player != null && !isDead)
         {
             float dist = Vector3.Distance(transform.position, player.position);
@@ -512,11 +564,17 @@ public class ZombieEnemy : MonoBehaviour
             }
         }
 
-        // Dernière position connue du joueur
         if (Application.isPlaying && currentState == ZombieState.Returning)
         {
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(lastKnownPlayerPos, 0.3f);
+        }
+
+        // DerniÃ¨re position valide NavMesh (debug)
+        if (Application.isPlaying)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawSphere(_lastValidPos, 0.15f);
         }
     }
 }

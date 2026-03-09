@@ -316,13 +316,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 862121f2cd8d9a0489646712ef3ceb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
-  launchForce: 50
-  damage: 40
+  launchForce: 100
+  damage: 100
   pickupRadius: 1
   playerLayer:
     serializedVersion: 2
     m_Bits: 8
-  bulletScale: 1.5
+  bulletScale: 2
 --- !u!54 &3643463881271287292
 Rigidbody:
   m_ObjectHideFlags: 0

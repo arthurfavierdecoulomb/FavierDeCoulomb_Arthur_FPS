@@ -503,3 +503,6 @@ MonoBehaviour:
   patrolWaitMax: 5
   patrolSamples: 5
   timeBeforeDestroy: 5
+  snapRadius: 4
+  navCheckInterval: 0.4
+  maxLinkTime: 2

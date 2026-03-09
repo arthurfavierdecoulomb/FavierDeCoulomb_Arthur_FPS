@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1556126331140831309}
   m_Layer: 0
   m_Name: Door_rotation_wood
-  m_TagString: Untagged
+  m_TagString: Ignore Navmesh
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -75,6 +75,8 @@ MonoBehaviour:
   closeDelay: 3
   detectionDepth: 20
   detectionWidth: 20
+  zombiesCanOpen: 1
+  zombieTag: Zombie
   openSound: {fileID: 0}
   closeSound: {fileID: 0}
 --- !u!1 &2827011303740856304
@@ -89,6 +91,7 @@ GameObject:
   - component: {fileID: 142667569628209150}
   - component: {fileID: 1574649026198365723}
   - component: {fileID: 2244416178727671796}
+  - component: {fileID: 7511526865438730589}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -189,6 +192,26 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
   m_Center: {x: 0, y: 0, z: -0.0000009536743}
+--- !u!114 &7511526865438730589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2827011303740856304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 0
+  m_Area: 0
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 1
+  m_ApplyToChildren: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &6268760146227141819
 GameObject:
   m_ObjectHideFlags: 0

@@ -67,11 +67,20 @@ public class MapGenerator : MonoBehaviour
     [Tooltip("L'UI du jeu à cacher pendant le chargement")]
     [SerializeField] private GameObject gameUIPanel;
 
+    // ── PATCH WaveManager ─────────────────────────────────────────────────
     [Header("Ennemis")]
+    [Tooltip("Assigne le WaveManager de la scène. S'il est assigné, c'est lui qui gère le spawn " +
+             "des zombies par vagues. Sinon, le spawn classique ci-dessous est utilisé.")]
+    [SerializeField] private WaveManager waveManager;
+
+    [Tooltip("(Fallback sans WaveManager) Prefab zombie")]
     [SerializeField] private GameObject zombiePrefab;
+    [Tooltip("(Fallback sans WaveManager) Zombies par petite pièce")]
     [SerializeField] private int zombiesPerSmallRoom = 1;
+    [Tooltip("(Fallback sans WaveManager) Zombies par grande pièce")]
     [SerializeField] private int zombiesPerLargeRoom = 3;
     [SerializeField] private float zombieSpawnYOffset = 0.1f;
+    // ─────────────────────────────────────────────────────────────────────
 
     [Header("Decoration")]
     [SerializeField] private int decoPerRoom = 2;
@@ -92,15 +101,29 @@ public class MapGenerator : MonoBehaviour
     private Dictionary<int, bool> roomIsLarge = new Dictionary<int, bool>();
     private GameObject mapParent;
     private List<RectInt> rooms = new List<RectInt>();
+    private bool isGenerating = false;
 
     void Start() => StartCoroutine(GenerateMapRoutine());
-    public void GenerateMap() => StartCoroutine(GenerateMapRoutine());
+
+    public void GenerateMap()
+    {
+        if (isGenerating)
+        {
+            Debug.LogWarning("MapGenerator: génération déjà en cours, ignorée.");
+            return;
+        }
+        StartCoroutine(GenerateMapRoutine());
+    }
 
     IEnumerator GenerateMapRoutine()
     {
-        int maxAllowedRoom = Mathf.Min(mapWidth, mapHeight) / 2;
-        if (largeRoomMax >= maxAllowedRoom) { Debug.LogError($"largeRoomMax trop grand ! Max: {maxAllowedRoom - 1}"); yield break; }
-        if (smallRoomMax >= maxAllowedRoom) { Debug.LogError($"smallRoomMax trop grand ! Max: {maxAllowedRoom - 1}"); yield break; }
+        if (!ValidateParameters()) yield break;
+        isGenerating = true;
+
+        roomCount = Mathf.Max(1, roomCount);
+        mapWidth = Mathf.Max(10, mapWidth);
+        mapHeight = Mathf.Max(10, mapHeight);
+        tileSize = Mathf.Max(0.1f, tileSize);
 
         if (seed != 0) Random.InitState(seed);
         else Random.InitState(System.DateTime.Now.Millisecond);
@@ -109,26 +132,18 @@ public class MapGenerator : MonoBehaviour
         mapParent = new GameObject("=== MAP GENEREE ===");
         rooms.Clear();
         roomIsLarge.Clear();
-
         grid = new TileType[mapWidth, mapHeight];
-        for (int x = 0; x < mapWidth; x++)
-            for (int y = 0; y < mapHeight; y++)
-                grid[x, y] = TileType.Empty;
 
-        // ── Cache l'UI du jeu pendant le chargement ────────────────────
         if (gameUIPanel != null) gameUIPanel.SetActive(false);
 
-        // ── Affiche l'intro et attend qu'elle soit terminée ────────────
         if (LoadingScreen.Instance != null)
         {
             LoadingScreen.Instance.Show();
             yield return LoadingScreen.Instance.WaitUntilReady();
         }
 
-        // ── Désactive le joueur, active la caméra cinématique ──────────
         if (player != null) player.SetActive(false);
-
-        Camera playerCam = player?.GetComponentInChildren<Camera>();
+        Camera playerCam = player != null ? player.GetComponentInChildren<Camera>() : null;
         if (playerCam != null) playerCam.enabled = false;
 
         if (cinematicCamera != null)
@@ -142,69 +157,141 @@ public class MapGenerator : MonoBehaviour
         yield return null;
 
         // ÉTAPE 1 — Pièces
-        LoadingScreen.Instance?.SetProgress(0.05f, "Génération des pièces...");
+        SetProgress(0.05f, "Génération des pièces...");
         yield return null;
         GenerateRooms();
+
+        if (rooms.Count == 0)
+        {
+            Debug.LogError("MapGenerator: aucune pièce générée — vérifiez les paramètres.");
+            FinishGeneration(); yield break;
+        }
         yield return null;
 
         // ÉTAPE 2 — Couloirs
-        LoadingScreen.Instance?.SetProgress(0.2f, "Création des couloirs...");
+        SetProgress(0.2f, "Création des couloirs...");
         yield return null;
         ConnectRooms();
         yield return null;
 
-        // ÉTAPE 3 — Géométrie (on la voit se construire !)
-        LoadingScreen.Instance?.SetProgress(0.35f, "Construction des murs...");
+        // ÉTAPE 3 — Géométrie
+        SetProgress(0.35f, "Construction des murs...");
         yield return StartCoroutine(BuildGeometryWithCamera());
 
         // ÉTAPE 4 — NavMesh
-        LoadingScreen.Instance?.SetProgress(0.6f, "Calcul de la navigation...");
+        SetProgress(0.6f, "Calcul de la navigation...");
         BakeNavMeshIfPresent();
         yield return new WaitForSeconds(0.35f);
 
         // ÉTAPE 5 — Décoration
-        LoadingScreen.Instance?.SetProgress(0.75f, "Placement de la décoration...");
+        SetProgress(0.75f, "Placement de la décoration...");
         SpawnDecoration();
 
-        // ÉTAPE 6 — Ennemis
-        LoadingScreen.Instance?.SetProgress(0.88f, "Apparition des ennemis...");
-        SpawnEnemies();
+        // ÉTAPE 6 — Ennemis / Vagues
+        SetProgress(0.88f, "Préparation des vagues...");
+        if (waveManager != null)
+        {
+            // Passe les données de la map au WaveManager pour qu'il gère les vagues
+            waveManager.InitAndStart(
+                rooms,
+                ConvertGrid(),
+                mapWidth,
+                mapHeight,
+                tileSize,
+                floorYOffset
+            );
+        }
+        else
+        {
+            // Fallback : spawn classique si aucun WaveManager n'est assigné
+            Debug.LogWarning("MapGenerator: WaveManager non assigné — spawn classique utilisé.");
+            SpawnEnemies();
+        }
 
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
 
-        // ÉTAPE 7 — Spawn joueur
-        LoadingScreen.Instance?.SetProgress(1f, "Prêt !");
+        // ÉTAPE 7 — Joueur
+        SetProgress(1f, "Prêt !");
         SpawnPlayer();
 
-        yield return new WaitForSeconds(0.4f); // barre atteint 100%
-        LoadingScreen.Instance?.Hide();
+        yield return new WaitForSeconds(0.4f);
+        if (LoadingScreen.Instance != null) LoadingScreen.Instance.Hide();
 
-        // ── Transition caméra cinématique → caméra joueur ───────────────
         if (cinematicCamera != null && player != null)
             yield return StartCoroutine(ReturnCameraToPlayer());
 
-        // ── Désactive la caméra cinématique, réactive le joueur ─────────
-        if (cinematicCamera != null) cinematicCamera.enabled = false;
-        Camera playerCamFinal = player?.GetComponentInChildren<Camera>();
-        if (playerCamFinal != null) playerCamFinal.enabled = true;
-        if (player != null) player.SetActive(true);
-
-        // ── Réaffiche l'UI du jeu ───────────────────────────────────────
-        if (gameUIPanel != null) gameUIPanel.SetActive(true);
-
+        FinishGeneration();
         Debug.Log("Map generee ! " + rooms.Count + " pieces.");
     }
 
-    // ─── Construit la géométrie tile par tile visible depuis la caméra ───
+    // ─── Helper progress ──────────────────────────────────────────────────
+    void SetProgress(float value, string message)
+    {
+        if (LoadingScreen.Instance != null)
+            LoadingScreen.Instance.SetProgress(value, message);
+    }
+
+    // ─── Fin de génération ────────────────────────────────────────────────
+    void FinishGeneration()
+    {
+        if (cinematicCamera != null) cinematicCamera.enabled = false;
+        Camera playerCamFinal = player != null ? player.GetComponentInChildren<Camera>() : null;
+        if (playerCamFinal != null) playerCamFinal.enabled = true;
+        if (player != null) player.SetActive(true);
+        if (gameUIPanel != null) gameUIPanel.SetActive(true);
+        isGenerating = false;
+    }
+
+    // ─── Validation ───────────────────────────────────────────────────────
+    bool ValidateParameters()
+    {
+        int maxAllowedRoom = Mathf.Min(mapWidth, mapHeight) / 2;
+        if (largeRoomMax <= 0 || smallRoomMax <= 0)
+        { Debug.LogError("MapGenerator: les tailles de pièces doivent être > 0."); return false; }
+        if (largeRoomMin > largeRoomMax)
+        { Debug.LogError($"MapGenerator: largeRoomMin ({largeRoomMin}) > largeRoomMax ({largeRoomMax})."); return false; }
+        if (smallRoomMin > smallRoomMax)
+        { Debug.LogError($"MapGenerator: smallRoomMin ({smallRoomMin}) > smallRoomMax ({smallRoomMax})."); return false; }
+        if (largeRoomMax >= maxAllowedRoom)
+        { Debug.LogError($"MapGenerator: largeRoomMax trop grand ! Max autorisé : {maxAllowedRoom - 1}"); return false; }
+        if (smallRoomMax >= maxAllowedRoom)
+        { Debug.LogError($"MapGenerator: smallRoomMax trop grand ! Max autorisé : {maxAllowedRoom - 1}"); return false; }
+        if (floorPrefab == null)
+        { Debug.LogError("MapGenerator: floorPrefab non assigné !"); return false; }
+        if (wallLongPrefab == null)
+        { Debug.LogError("MapGenerator: wallLongPrefab non assigné !"); return false; }
+        return true;
+    }
+
+    // ─── Conversion grille → WaveManager ─────────────────────────────────
+    WaveManager.TileType[,] ConvertGrid()
+    {
+        var result = new WaveManager.TileType[mapWidth, mapHeight];
+        for (int x = 0; x < mapWidth; x++)
+            for (int y = 0; y < mapHeight; y++)
+            {
+                result[x, y] = grid[x, y] switch
+                {
+                    TileType.Floor => WaveManager.TileType.Floor,
+                    TileType.Corridor => WaveManager.TileType.Corridor,
+                    _ => WaveManager.TileType.Empty
+                };
+            }
+        return result;
+    }
+
+    // ─── Géométrie ────────────────────────────────────────────────────────
     IEnumerator BuildGeometryWithCamera()
     {
         var fp = Child("Floors");
         var wp2 = Child("Walls");
         HashSet<Vector2Int> dt = ComputeDoorTiles();
-        int sc = 0, ms = mapWidth * mapHeight * 12;
-        int tilesPerFrame = 8; // tiles construites par frame (ajuste pour vitesse)
+
+        int maxObjects = mapWidth * mapHeight * 16;
+        int sc = 0;
+        int tilesPerFrame = Mathf.Max(1, 8);
         int counter = 0;
 
         for (int x = 0; x < mapWidth; x++)
@@ -213,11 +300,17 @@ public class MapGenerator : MonoBehaviour
             {
                 TileType t = grid[x, y];
                 if (t == TileType.Empty) continue;
-                if (sc > ms) { Debug.LogError("SECURITE: trop d'objets !"); yield break; }
+
+                if (sc >= maxObjects)
+                { Debug.LogError($"MapGenerator: limite d'objets atteinte ({maxObjects}). Arrêt prématuré."); yield break; }
 
                 Vector3 w = GridToWorld(x, y);
-                SpawnPrefab(floorPrefab, w, 0f, fp, floorScale, floorBaseRot, floorYOffset); sc++;
-                SpawnPrefab(ceilingPrefab != null ? ceilingPrefab : floorPrefab, w, 0f, fp, ceilingScale, ceilingBaseRot, ceilingYOffset); sc++;
+
+                if (floorPrefab != null)
+                { SpawnPrefab(floorPrefab, w, 0f, fp, floorScale, floorBaseRot, floorYOffset); sc++; }
+
+                GameObject ceilPref = ceilingPrefab != null ? ceilingPrefab : floorPrefab;
+                SpawnPrefab(ceilPref, w, 0f, fp, ceilingScale, ceilingBaseRot, ceilingYOffset); sc++;
 
                 if (IsEmpty(x, y + 1)) { SpawnWallOrDoor(x, y, 0f, wp2, dt, wallYOffset); SpawnWall(x, y, 0f, wp2, wall2YOffset); sc += 2; }
                 if (IsEmpty(x, y - 1)) { SpawnWallOrDoor(x, y, 180f, wp2, dt, wallYOffset); SpawnWall(x, y, 180f, wp2, wall2YOffset); sc += 2; }
@@ -238,67 +331,88 @@ public class MapGenerator : MonoBehaviour
                     sc += 4;
                 }
 
-                // Déplace la caméra vers la tile en cours de construction
                 if (cinematicCamera != null)
                 {
-                    Vector3 target = new Vector3(w.x, cinemaHeight, w.z);
+                    float dt2 = Mathf.Max(Time.deltaTime, 0.016f);
+                    Vector3 tgt = new Vector3(w.x, cinemaHeight, w.z);
                     cinematicCamera.transform.position = Vector3.MoveTowards(
-                        cinematicCamera.transform.position, target,
-                        cinematicMoveSpeed * Time.deltaTime * tilesPerFrame
+                        cinematicCamera.transform.position, tgt,
+                        cinematicMoveSpeed * dt2 * tilesPerFrame
                     );
                 }
 
                 counter++;
-                if (counter >= tilesPerFrame)
-                {
-                    counter = 0;
-                    yield return null; // pause d'une frame pour voir la construction
-                }
+                if (counter >= tilesPerFrame) { counter = 0; yield return null; }
             }
         }
-
         Debug.Log($"BuildGeometry: {sc} objets.");
     }
 
-    // ─── Transition douce caméra → joueur ────────────────────────────────
+    // ─── Transition caméra → joueur ───────────────────────────────────────
     IEnumerator ReturnCameraToPlayer()
     {
+        if (cinematicCamera == null || player == null) yield break;
+
         Vector3 startPos = cinematicCamera.transform.position;
         Quaternion startRot = cinematicCamera.transform.rotation;
 
-        // Cible = position de la caméra du joueur
         Camera playerCam = player.GetComponentInChildren<Camera>();
-        Vector3 endPos = playerCam != null ? playerCam.transform.position : player.transform.position + Vector3.up * 1.6f;
-        Quaternion endRot = playerCam != null ? playerCam.transform.rotation : player.transform.rotation;
+        Vector3 endPos = playerCam != null ? playerCam.transform.position
+                                              : player.transform.position + Vector3.up * 1.6f;
+        Quaternion endRot = playerCam != null ? playerCam.transform.rotation
+                                              : player.transform.rotation;
 
+        float duration = Mathf.Max(0.01f, returnDuration);
         float elapsed = 0f;
-        while (elapsed < returnDuration)
+        while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(elapsed / returnDuration), 3f);
+            float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(elapsed / duration), 3f);
             cinematicCamera.transform.position = Vector3.Lerp(startPos, endPos, t);
             cinematicCamera.transform.rotation = Quaternion.Slerp(startRot, endRot, t);
             yield return null;
         }
+        cinematicCamera.transform.position = endPos;
+        cinematicCamera.transform.rotation = endRot;
     }
 
-    // ─── Reste du code inchangé ───────────────────────────────────────────
-
+    // ─── Génération des pièces ────────────────────────────────────────────
     void GenerateRooms()
     {
+        smallRoomMin = Mathf.Max(2, smallRoomMin);
+        smallRoomMax = Mathf.Max(smallRoomMin, smallRoomMax);
+        largeRoomMin = Mathf.Max(2, largeRoomMin);
+        largeRoomMax = Mathf.Max(largeRoomMin, largeRoomMax);
+
         int attempts = 0, maxAttempts = roomCount * 15;
         while (rooms.Count < roomCount && attempts < maxAttempts)
         {
             attempts++;
             bool isLarge = Random.value < largeRoomRatio;
-            int w = Random.Range(isLarge ? largeRoomMin : smallRoomMin, (isLarge ? largeRoomMax : smallRoomMax) + 1);
-            int h = Random.Range(isLarge ? largeRoomMin : smallRoomMin, (isLarge ? largeRoomMax : smallRoomMax) + 1);
-            int maxX = mapWidth - w - 1, maxY = mapHeight - h - 1;
+            int minW = isLarge ? largeRoomMin : smallRoomMin;
+            int maxW = isLarge ? largeRoomMax : smallRoomMax;
+
+            int w = (minW == maxW) ? minW : Random.Range(minW, maxW + 1);
+            int h = (minW == maxW) ? minW : Random.Range(minW, maxW + 1);
+
+            int maxX = mapWidth - w - 1;
+            int maxY = mapHeight - h - 1;
             if (maxX < 2 || maxY < 2) continue;
-            int x = Random.Range(2, maxX), y = Random.Range(2, maxY);
+
+            int x = Random.Range(2, maxX);
+            int y = Random.Range(2, maxY);
+
             RectInt newRoom = new RectInt(x, y, w, h);
-            if (!OverlapsExistingRoom(newRoom, 2)) { roomIsLarge[rooms.Count] = isLarge; rooms.Add(newRoom); CarveRoom(newRoom); }
+            if (!OverlapsExistingRoom(newRoom, 2))
+            {
+                roomIsLarge[rooms.Count] = isLarge;
+                rooms.Add(newRoom);
+                CarveRoom(newRoom);
+            }
         }
+
+        if (rooms.Count < roomCount)
+            Debug.LogWarning($"MapGenerator: seulement {rooms.Count}/{roomCount} pièces générées.");
     }
 
     bool OverlapsExistingRoom(RectInt room, int margin)
@@ -320,6 +434,7 @@ public class MapGenerator : MonoBehaviour
 
     void ConnectRooms()
     {
+        if (rooms.Count < 2) return;
         for (int i = 0; i < rooms.Count - 1; i++)
             CarveCorridor(GetRoomCenter(rooms[i]), GetRoomCenter(rooms[i + 1]));
     }
@@ -332,40 +447,55 @@ public class MapGenerator : MonoBehaviour
         else { CarveV(a.y, b.y, a.x); CarveH(a.x, b.x, b.y); }
     }
 
-    void CarveH(int x0, int x1, int y) { for (int x = Mathf.Min(x0, x1); x <= Mathf.Max(x0, x1); x++) if (grid[x, y] == TileType.Empty) grid[x, y] = TileType.Corridor; }
-    void CarveV(int y0, int y1, int x) { for (int y = Mathf.Min(y0, y1); y <= Mathf.Max(y0, y1); y++) if (grid[x, y] == TileType.Empty) grid[x, y] = TileType.Corridor; }
+    void CarveH(int x0, int x1, int y)
+    {
+        for (int x = Mathf.Min(x0, x1); x <= Mathf.Max(x0, x1); x++)
+            if (IsInBounds(x, y) && grid[x, y] == TileType.Empty)
+                grid[x, y] = TileType.Corridor;
+    }
+
+    void CarveV(int y0, int y1, int x)
+    {
+        for (int y = Mathf.Min(y0, y1); y <= Mathf.Max(y0, y1); y++)
+            if (IsInBounds(x, y) && grid[x, y] == TileType.Empty)
+                grid[x, y] = TileType.Corridor;
+    }
 
     HashSet<Vector2Int> ComputeDoorTiles()
     {
         var dt = new HashSet<Vector2Int>();
-        for (int x = 0; x < mapWidth; x++) for (int y = 0; y < mapHeight; y++)
-                if (grid[x, y] == TileType.Corridor && (IsFloor(x + 1, y) || IsFloor(x - 1, y) || IsFloor(x, y + 1) || IsFloor(x, y - 1)))
+        for (int x = 0; x < mapWidth; x++)
+            for (int y = 0; y < mapHeight; y++)
+                if (grid[x, y] == TileType.Corridor &&
+                    (IsFloor(x + 1, y) || IsFloor(x - 1, y) || IsFloor(x, y + 1) || IsFloor(x, y - 1)))
                     dt.Add(new Vector2Int(x, y));
         return dt;
     }
 
     void SpawnWall(int x, int y, float angle, Transform parent, float yOff = 0f)
     {
-        float h = tileSize / 2f;
-        Vector3 off = angle switch { 0f => new Vector3(0, 0, h), 180f => new Vector3(0, 0, -h), 90f => new Vector3(h, 0, 0), 270f => new Vector3(-h, 0, 0), _ => Vector3.zero };
-        SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + off, angle, parent, wallScale, wallBaseRot, yOff);
+        if (wallLongPrefab == null) return;
+        SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + AngleToOffset(angle, tileSize / 2f), angle, parent, wallScale, wallBaseRot, yOff);
     }
 
     void SpawnWallOrDoor(int x, int y, float angle, Transform parent, HashSet<Vector2Int> dt, float yOff)
     {
-        float h = tileSize / 2f;
-        Vector3 off = angle switch { 0f => new Vector3(0, 0, h), 180f => new Vector3(0, 0, -h), 90f => new Vector3(h, 0, 0), 270f => new Vector3(-h, 0, 0), _ => Vector3.zero };
-        Vector3 wp = GridToWorld(x, y) + off;
+        Vector3 wp = GridToWorld(x, y) + AngleToOffset(angle, tileSize / 2f);
         int nx = x, ny = y;
-        if (angle == 0f) ny++; else if (angle == 180f) ny--; else if (angle == 90f) nx++; else if (angle == 270f) nx--;
+        if (angle == 0f) ny++;
+        else if (angle == 180f) ny--;
+        else if (angle == 90f) nx++;
+        else if (angle == 270f) nx--;
 
         bool isDoor = (grid[x, y] == TileType.Floor && dt.Contains(new Vector2Int(nx, ny))) ||
                       (grid[x, y] == TileType.Corridor && dt.Contains(new Vector2Int(x, y)) && IsFloor(nx, ny));
 
         if (isDoor)
         {
-            int rx = IsFloor(x, y) ? x : nx, ry = IsFloor(x, y) ? y : ny;
-            bool isLarge = IsLargeRoom(rx, ry), isGlass = Random.value < glassVsWoodChance;
+            int rx = IsFloor(x, y) ? x : nx;
+            int ry = IsFloor(x, y) ? y : ny;
+            bool isLarge = IsLargeRoom(rx, ry);
+            bool isGlass = Random.value < glassVsWoodChance;
             GameObject pref;
             if (isLarge) pref = isGlass ? (wallDoubleDoorGlassPrefab ?? wallLongPrefab) : (wallDoubleDoorWoodPrefab ?? wallLongPrefab);
             else pref = isGlass ? (wallDoorGlassPrefab ?? wallLongPrefab) : (wallDoorWoodPrefab ?? wallLongPrefab);
@@ -373,6 +503,15 @@ public class MapGenerator : MonoBehaviour
         }
         else SpawnPrefab(wallLongPrefab, wp, angle, parent, wallScale, wallBaseRot, yOff);
     }
+
+    Vector3 AngleToOffset(float angle, float half) => angle switch
+    {
+        0f => new Vector3(0, 0, half),
+        180f => new Vector3(0, 0, -half),
+        90f => new Vector3(half, 0, 0),
+        270f => new Vector3(-half, 0, 0),
+        _ => Vector3.zero
+    };
 
     void SpawnCorridorSideWalls(int x, int y, Transform parent, float yOff)
     {
@@ -385,20 +524,28 @@ public class MapGenerator : MonoBehaviour
         if (v && !IsCorridorOrFloor(x - 1, y)) SpawnPrefab(wallLongPrefab, GridToWorld(x, y) + new Vector3(-s, 0, 0), 270f, parent, wallScale, wallBaseRot, yOff);
     }
 
+    // ─── Spawn classique (fallback sans WaveManager) ──────────────────────
     void SpawnEnemies()
     {
-        if (zombiePrefab == null) { Debug.LogWarning("Aucun prefab zombie !"); return; }
-        var ep = new GameObject("Enemies"); ep.transform.parent = mapParent.transform;
+        if (zombiePrefab == null) { Debug.LogWarning("MapGenerator: aucun prefab zombie !"); return; }
+        if (rooms.Count == 0) return;
+
+        var ep = new GameObject("Enemies");
+        ep.transform.parent = mapParent.transform;
+
         for (int i = 1; i < rooms.Count; i++)
         {
-            RectInt r = rooms[i]; bool lg = roomIsLarge.ContainsKey(i) && roomIsLarge[i];
-            int cnt = lg ? zombiesPerLargeRoom : zombiesPerSmallRoom;
+            RectInt r = rooms[i];
+            bool lg = roomIsLarge.ContainsKey(i) && roomIsLarge[i];
+            int cnt = Mathf.Max(0, lg ? zombiesPerLargeRoom : zombiesPerSmallRoom);
+
             for (int z = 0; z < cnt; z++)
             {
                 int rx, ry;
                 if (r.width <= 2 || r.height <= 2) { rx = r.x + r.width / 2; ry = r.y + r.height / 2; }
                 else { rx = Random.Range(r.x + 1, r.x + r.width - 1); ry = Random.Range(r.y + 1, r.y + r.height - 1); }
-                Vector3 p = GridToWorld(rx, ry); p.y = floorYOffset + zombieSpawnYOffset;
+                Vector3 p = GridToWorld(rx, ry);
+                p.y = floorYOffset + zombieSpawnYOffset;
                 Instantiate(zombiePrefab, p, Quaternion.Euler(0, Random.Range(0f, 360f), 0), ep.transform);
             }
         }
@@ -421,7 +568,8 @@ public class MapGenerator : MonoBehaviour
         if (grossePoubellePrefab != null) validPrefabs.Add(grossePoubellePrefab);
         if (pileDePalletsPrefab != null) validPrefabs.Add(pileDePalletsPrefab);
         if (tonneauxPrefab != null) validPrefabs.Add(tonneauxPrefab);
-        if (validPrefabs.Count == 0) { Debug.LogWarning("Aucun prefab de decoration assigne !"); return; }
+        if (validPrefabs.Count == 0) { Debug.LogWarning("MapGenerator: aucun prefab de décoration !"); return; }
+        if (rooms.Count == 0) return;
 
         GameObject decoParent = new GameObject("Decoration");
         decoParent.transform.parent = mapParent.transform;
@@ -436,19 +584,23 @@ public class MapGenerator : MonoBehaviour
             var candidates = new List<Vector2Int>();
             for (int x = room.x + 1; x < room.x + room.width - 1; x++)
                 for (int y = room.y + 1; y < room.y + room.height - 1; y++)
-                    if (IsTileAgainstWall(x, y) && !IsTileNearCorridor(x, y, 2) && !usedTiles.Contains(new Vector2Int(x, y)))
-                        candidates.Add(new Vector2Int(x, y));
+                {
+                    var tile = new Vector2Int(x, y);
+                    if (IsTileAgainstWall(x, y) && !IsTileNearCorridor(x, y, 2) && !usedTiles.Contains(tile))
+                        candidates.Add(tile);
+                }
 
             if (candidates.Count < decoPerRoom)
                 for (int x = room.x + 1; x < room.x + room.width - 1; x++)
                     for (int y = room.y + 1; y < room.y + room.height - 1; y++)
                     {
-                        var t = new Vector2Int(x, y);
-                        if (!IsTileNearCorridor(x, y, 1) && !usedTiles.Contains(t) && !candidates.Contains(t))
-                            candidates.Add(t);
+                        var tile = new Vector2Int(x, y);
+                        if (!IsTileNearCorridor(x, y, 1) && !usedTiles.Contains(tile) && !candidates.Contains(tile))
+                            candidates.Add(tile);
                     }
 
-            for (int d = 0; d < decoPerRoom && candidates.Count > 0; d++)
+            int decoCount = Mathf.Max(0, decoPerRoom);
+            for (int d = 0; d < decoCount && candidates.Count > 0; d++)
             {
                 int idx = Random.Range(0, candidates.Count);
                 Vector2Int tile = candidates[idx];
@@ -460,25 +612,22 @@ public class MapGenerator : MonoBehaviour
                 total++;
             }
         }
-        Debug.Log($"Decoration : {total} objets places.");
+        Debug.Log($"Décoration: {total} objets placés.");
     }
 
     void SpawnPlayer()
     {
-        if (rooms.Count == 0) { Debug.LogWarning("Aucune piece !"); return; }
-        if (player == null) { Debug.LogWarning("Aucun joueur assigné !"); return; }
+        if (rooms.Count == 0) { Debug.LogWarning("MapGenerator: aucune pièce !"); return; }
+        if (player == null) { Debug.LogWarning("MapGenerator: aucun joueur assigné !"); return; }
 
         Vector2Int c = GetRoomCenter(rooms[0]);
         Vector3 p = new Vector3(c.x * tileSize, floorYOffset + playerSpawnYOffset, c.y * tileSize);
 
         CharacterController cc = player.GetComponent<CharacterController>();
-        if (cc != null) cc.enabled = false;
         Rigidbody rb = player.GetComponent<Rigidbody>();
+        if (cc != null) cc.enabled = false;
         if (rb != null) rb.isKinematic = true;
-
-        player.transform.position = p;
-        player.transform.rotation = Quaternion.identity;
-
+        player.transform.SetPositionAndRotation(p, Quaternion.identity);
         if (cc != null) cc.enabled = true;
         if (rb != null) rb.isKinematic = false;
 
@@ -489,27 +638,31 @@ public class MapGenerator : MonoBehaviour
     {
         NavMeshBaker b = GetComponent<NavMeshBaker>();
         if (b != null) b.BakeNavMesh();
-        else Debug.LogWarning("NavMeshBaker non trouve !");
+        else Debug.LogWarning("MapGenerator: NavMeshBaker non trouvé !");
     }
 
     bool IsLargeRoom(int x, int y)
     {
         for (int i = 0; i < rooms.Count; i++)
-            if (rooms[i].Contains(new Vector2Int(x, y))) return roomIsLarge.ContainsKey(i) && roomIsLarge[i];
+            if (rooms[i].Contains(new Vector2Int(x, y)))
+                return roomIsLarge.ContainsKey(i) && roomIsLarge[i];
         return false;
     }
 
-    /// Retourne le centre mondial de la map (utilisé par la caméra d'orbite du DeathScreen)
-    public Vector3 GetMapCenter()
-    {
-        return new Vector3((mapWidth / 2f) * tileSize, 0f, (mapHeight / 2f) * tileSize);
-    }
+    public Vector3 GetMapCenter() =>
+        new Vector3((mapWidth / 2f) * tileSize, 0f, (mapHeight / 2f) * tileSize);
 
-    Transform Child(string name) { var g = new GameObject(name); g.transform.parent = mapParent.transform; return g.transform; }
+    Transform Child(string name)
+    {
+        var g = new GameObject(name);
+        g.transform.parent = mapParent.transform;
+        return g.transform;
+    }
 
     void SpawnPrefab(GameObject prefab, Vector3 pos, float angleY, Transform parent, Vector3 scale, Vector3 baseRot, float yOffset)
     {
         if (prefab == null) return;
+        if (parent == null) { Debug.LogWarning("MapGenerator: parent null dans SpawnPrefab, ignoré."); return; }
         pos.y += yOffset;
         var o = Instantiate(prefab, pos, Quaternion.Euler(baseRot.x, baseRot.y + angleY, baseRot.z), parent);
         o.transform.localScale = scale;
@@ -525,7 +678,8 @@ public class MapGenerator : MonoBehaviour
     void OnDrawGizmos()
     {
         if (grid == null) return;
-        for (int x = 0; x < mapWidth; x++) for (int y = 0; y < mapHeight; y++)
+        for (int x = 0; x < mapWidth; x++)
+            for (int y = 0; y < mapHeight; y++)
             {
                 if (grid[x, y] == TileType.Floor) Gizmos.color = new Color(0.2f, 0.8f, 0.2f, 0.5f);
                 else if (grid[x, y] == TileType.Corridor) Gizmos.color = new Color(0.2f, 0.4f, 0.8f, 0.5f);

@@ -4815,7 +4815,7 @@ MonoBehaviour:
   player: {fileID: 1387186510}
   playerSpawnYOffset: 2
   gameUIPanel: {fileID: 1186428399}
-  waveManager: {fileID: 633508317}
+  waveManager: {fileID: 0}
   zombiePrefab: {fileID: 4562475909303982152, guid: 91f54e34babeacb49a3e75b73abbb918, type: 3}
   zombiesPerSmallRoom: 1
   zombiesPerLargeRoom: 3
@@ -4859,7 +4859,7 @@ MonoBehaviour:
   m_Center: {x: 0, y: 2, z: 0}
   m_LayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 4294967295
   m_UseGeometry: 0
   m_DefaultArea: 0
   m_GenerateLinks: 0
