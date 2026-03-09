@@ -4331,7 +4331,7 @@ MonoBehaviour:
   largeRoomRatio: 0.4
   player: {fileID: 1387186510}
   playerSpawnYOffset: 2
-  gameUIPanel: {fileID: 1186428399}
+  gameUIPanel: {fileID: 0}
   zombiePrefab: {fileID: 4562475909303982152, guid: 91f54e34babeacb49a3e75b73abbb918, type: 3}
   zombiesPerSmallRoom: 1
   zombiesPerLargeRoom: 3

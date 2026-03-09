@@ -1,6 +1,7 @@
+using System.Collections;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections;
 
 /// <summary>
 /// IA Zombie intelligente :
@@ -80,40 +81,42 @@ public class ZombieEnemy : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         if (agent == null) { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
 
-
-
         agent.speed = walkSpeed;
         agent.stoppingDistance = attackRange * 0.8f;
-        agent.angularSpeed = 0f; // On gère la rotation manuellement pour plus de fluidité
+        agent.angularSpeed = 0f;
 
         if (animator == null) animator = GetComponent<Animator>();
         if (animator == null) { Debug.LogError("Animator manquant sur " + name); enabled = false; return; }
 
-        if (player == null)
+        // Tente de trouver le joueur au Start — si inactif, on réessaiera dans Update
+        TryFindPlayer();
+    }
+
+    // Cherche le joueur (appelé au Start et dans Update si pas encore trouvé)
+    void TryFindPlayer()
+    {
+        if (player != null) return; // déjà trouvé
+
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                player = playerObj.transform;
-                playerHealth = playerObj.GetComponentInChildren<PlayerHealth>();
-                Debug.Log(name + " trouve le joueur automatiquement : " + player.name);
-            }
-            else Debug.LogWarning("Aucun joueur avec le tag 'Player' !");
+            player = playerObj.transform;
+            playerHealth = playerObj.GetComponentInChildren<PlayerHealth>();
+            Debug.Log(name + " a trouvé le joueur : " + player.name);
         }
-        else
-        {
-            playerHealth = player.GetComponentInChildren<PlayerHealth>();
-        }
-
-
-
-
     }
 
     // =============================================
     void Update()
     {
-        if (isDead || player == null) return;
+        if (isDead) return;
+
+        // Tant que le joueur n'est pas trouvé, on réessaie chaque frame
+        if (player == null)
+        {
+            TryFindPlayer();
+            return; // on attend d'avoir le joueur avant de faire quoi que ce soit
+        }
 
         UpdatePerception();
         UpdateStateMachine();

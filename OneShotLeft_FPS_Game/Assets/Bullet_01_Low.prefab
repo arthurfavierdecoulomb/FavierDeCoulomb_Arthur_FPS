@@ -316,8 +316,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 862121f2cd8d9a0489646712ef3ceb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
-  launchForce: 20
-  damage: 100000000
+  launchForce: 50
+  damage: 40
   pickupRadius: 1
   playerLayer:
     serializedVersion: 2

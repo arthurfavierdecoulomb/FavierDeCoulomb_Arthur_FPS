@@ -1,7 +1,5 @@
 using UnityEngine;
 
-using UnityEngine;
-
 public class Bullet : MonoBehaviour
 {
     [Header("Physics")]
