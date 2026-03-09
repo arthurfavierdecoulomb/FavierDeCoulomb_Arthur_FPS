@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -147,6 +148,17 @@ public class WaveManager : MonoBehaviour
         {
             Vector2Int tile = spawnTiles[Random.Range(0, spawnTiles.Count)];
             Vector3 pos = new Vector3(tile.x * tileSize, floorYOffset + spawnYOffset, tile.y * tileSize);
+
+            // Trouve le point NavMesh le plus proche pour éviter "not close enough to NavMesh"
+            NavMeshHit navHit;
+            if (NavMesh.SamplePosition(pos, out navHit, 3f, NavMesh.AllAreas))
+                pos = new Vector3(navHit.position.x, navHit.position.y + spawnYOffset, navHit.position.z);
+            else
+            {
+                // Aucun NavMesh trouvé dans 3m — on skip ce zombie
+                Debug.LogWarning($"WaveManager: aucun NavMesh trouvé pour spawner un zombie à {pos}, tile ignorée.");
+                continue;
+            }
 
             GameObject go = Instantiate(
                 zombiePrefab,

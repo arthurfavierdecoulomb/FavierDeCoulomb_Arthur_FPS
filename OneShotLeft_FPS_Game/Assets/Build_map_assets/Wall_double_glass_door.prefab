@@ -12,8 +12,6 @@ GameObject:
   - component: {fileID: 937025630009483599}
   - component: {fileID: 5017661148721780032}
   - component: {fileID: 7963468299287024703}
-  - component: {fileID: 7417964043482172043}
-  - component: {fileID: 7297487031233793441}
   m_Layer: 0
   m_Name: Glass_door
   m_TagString: Untagged
@@ -114,46 +112,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
   m_Center: {x: 0, y: 0, z: 0.000000029802322}
---- !u!114 &7417964043482172043
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1322346658672272921}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 1
-  m_ApplyToChildren: 1
-  m_AffectedAgents: ffffffff
---- !u!114 &7297487031233793441
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1322346658672272921}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 1
-  m_ApplyToChildren: 0
-  m_AffectedAgents: ffffffff
 --- !u!1 &4265292648477362138
 GameObject:
   m_ObjectHideFlags: 0
@@ -245,7 +203,6 @@ GameObject:
   - component: {fileID: 2991047458731463959}
   - component: {fileID: 1530693467687855176}
   - component: {fileID: 7646091227217412492}
-  - component: {fileID: 7347075602219886000}
   m_Layer: 0
   m_Name: Glass_door
   m_TagString: Untagged
@@ -346,26 +303,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
   m_Center: {x: 0, y: 0, z: 0.000000029802322}
---- !u!114 &7347075602219886000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5296301145823456394}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 1
-  m_ApplyToChildren: 0
-  m_AffectedAgents: ffffffff
 --- !u!1 &7348133114697653017
 GameObject:
   m_ObjectHideFlags: 0

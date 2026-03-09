@@ -180,7 +180,7 @@ public class MapGenerator : MonoBehaviour
 
         // ÉTAPE 4 — NavMesh
         SetProgress(0.6f, "Calcul de la navigation...");
-        BakeNavMeshIfPresent();
+        yield return StartCoroutine(BakeNavMeshIfPresent());
         yield return new WaitForSeconds(0.35f);
 
         // ÉTAPE 5 — Décoration
@@ -634,11 +634,16 @@ public class MapGenerator : MonoBehaviour
         Debug.Log("Joueur repositionné à : " + p);
     }
 
-    void BakeNavMeshIfPresent()
+    IEnumerator BakeNavMeshIfPresent()
     {
         NavMeshBaker b = GetComponent<NavMeshBaker>();
-        if (b != null) b.BakeNavMesh();
-        else Debug.LogWarning("MapGenerator: NavMeshBaker non trouvé !");
+        if (b != null)
+        {
+            // Donne au baker le centre de la map pour vérifier que le NavMesh est actif
+            b.navMeshCheckPoint = new Vector3((mapWidth / 2f) * tileSize, floorYOffset, (mapHeight / 2f) * tileSize);
+            yield return StartCoroutine(b.BakeNavMeshRoutine());
+        }
+        else { Debug.LogWarning("MapGenerator: NavMeshBaker non trouvé !"); yield break; }
     }
 
     bool IsLargeRoom(int x, int y)

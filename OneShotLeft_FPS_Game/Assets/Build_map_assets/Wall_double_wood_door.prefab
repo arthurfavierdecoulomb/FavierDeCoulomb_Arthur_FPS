@@ -91,7 +91,6 @@ GameObject:
   - component: {fileID: 6087143639068866413}
   - component: {fileID: 1448386728458145822}
   - component: {fileID: 3533059360249712194}
-  - component: {fileID: 209059451545092066}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -192,26 +191,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287877, y: 1.9892966, z: 0.9778281}
   m_Center: {x: -0.0000076293945, y: 0, z: 0.0000019073486}
---- !u!114 &209059451545092066
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5352636733962130868}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 1
-  m_ApplyToChildren: 0
-  m_AffectedAgents: ffffffff
 --- !u!1 &6715216358354227801
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,7 +203,6 @@ GameObject:
   - component: {fileID: 6390887758713562523}
   - component: {fileID: 4149241823511310574}
   - component: {fileID: 6857648358708011365}
-  - component: {fileID: 5804300335987221715}
   m_Layer: 0
   m_Name: Wood_door
   m_TagString: Untagged
@@ -325,26 +303,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23287868, y: 1.9892966, z: 0.9778277}
   m_Center: {x: 0.0000076293945, y: 0, z: 0}
---- !u!114 &5804300335987221715
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6715216358354227801}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 1
-  m_ApplyToChildren: 0
-  m_AffectedAgents: ffffffff
 --- !u!1 &7349358788965040065
 GameObject:
   m_ObjectHideFlags: 0

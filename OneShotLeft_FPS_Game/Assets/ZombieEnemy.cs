@@ -142,6 +142,9 @@ public class ZombieEnemy : MonoBehaviour
         if (isDead) return;
         if (player == null) { TryFindPlayer(); return; }
 
+        // Attend que le NavMesh soit baked et que l'agent soit placé dessus
+        if (agent == null || !agent.isOnNavMesh) return;
+
         UpdateNavMeshGuard();
         UpdatePerception();
         UpdateStateMachine();
@@ -316,6 +319,9 @@ public class ZombieEnemy : MonoBehaviour
     {
         if (newState == currentState) return;
         currentState = newState;
+
+        // Ne touche pas à l'agent si pas encore sur le NavMesh
+        if (agent == null || !agent.isOnNavMesh) return;
 
         switch (newState)
         {

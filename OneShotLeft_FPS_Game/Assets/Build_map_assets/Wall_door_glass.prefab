@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 2376218027437121982}
   - component: {fileID: 8556293096874673569}
   - component: {fileID: 8994355299846290957}
-  - component: {fileID: 6693298583406095179}
   m_Layer: 0
   m_Name: Glass_door_rotation
   m_TagString: Ignore Navmesh
@@ -80,26 +79,6 @@ MonoBehaviour:
   zombieTag: Zombie
   openSound: {fileID: 0}
   closeSound: {fileID: 0}
---- !u!114 &6693298583406095179
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6290791432618039897}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 1
-  m_ApplyToChildren: 1
-  m_AffectedAgents: ffffffff
 --- !u!1 &7356331897866542184
 GameObject:
   m_ObjectHideFlags: 0
@@ -114,7 +93,6 @@ GameObject:
   - component: {fileID: 6286459491028910686}
   - component: {fileID: 4080575379338708716}
   - component: {fileID: 3808255101176495265}
-  - component: {fileID: 499264478421028290}
   m_Layer: 0
   m_Name: Wall_door_glass
   m_TagString: Untagged
@@ -257,26 +235,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.19999999, y: 0.51437867, z: 3.0133052}
   m_Center: {x: 0, y: 0.99281186, z: 0.0066525145}
---- !u!114 &499264478421028290
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7356331897866542184}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 0
-  m_Area: 0
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 0
-  m_ApplyToChildren: 0
-  m_AffectedAgents: ffffffff
 --- !u!1 &8750765217615753499
 GameObject:
   m_ObjectHideFlags: 0

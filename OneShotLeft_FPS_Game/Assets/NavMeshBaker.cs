@@ -1,69 +1,61 @@
-using UnityEngine;
+ï»¿using UnityEngine;
+using UnityEngine.AI;
 using System.Collections;
 using Unity.AI.Navigation;
 
-/// <summary>
-/// Cuit le NavMesh automatiquement après la génération de la map.
-/// Compatible Unity 6 (6000.x) — package AI Navigation intégré.
-///
-/// SETUP :
-/// 1. Sur le même GameObject que MapGenerator, ajoute :
-///    - Ce script (NavMeshBaker)
-///    - NavMeshSurface (Add Component ? Navigation ? NavMesh Surface)
-/// 2. Dans NavMeshSurface :
-///    - Collect Objects : All Game Objects
-///    - Use Geometry    : Physics Colliders
-///    - Default Area    : Walkable
-/// 3. Lance le jeu — le NavMesh se cuit automatiquement après la map !
-/// </summary>
 public class NavMeshBaker : MonoBehaviour
 {
     private NavMeshSurface surface;
 
-    [Header("Paramètres")]
-    [Tooltip("Délai en secondes pour laisser tous les Instantiate() se terminer")]
-    [SerializeField] private float bakeDelay = 0.2f;
+    [Header("ParamÃ¨tres")]
+    [SerializeField] private float bakeDelay = 0.5f;
+    [SerializeField] private float bakeTimeout = 8f;
     [SerializeField] private bool logBakeTime = true;
+
+    // Point de rÃ©fÃ©rence pour vÃ©rifier que le NavMesh est actif
+    // (sera dÃ©fini par MapGenerator au centre de la map)
+    [HideInInspector] public Vector3 navMeshCheckPoint = Vector3.zero;
 
     void Awake()
     {
         surface = GetComponent<NavMeshSurface>();
-
         if (surface == null)
-            Debug.LogError(
-                "NavMeshBaker : NavMeshSurface manquant !\n" +
-                "? Add Component ? Navigation ? NavMesh Surface\n" +
-                "? sur le même GameObject que MapGenerator"
-            );
+            Debug.LogError("NavMeshBaker : NavMeshSurface manquant !");
     }
 
-    /// <summary>
-    /// Appelé par MapGenerator.BakeNavMeshIfPresent() après la génération.
-    /// </summary>
-    public void BakeNavMesh()
+    public IEnumerator BakeNavMeshRoutine()
     {
-        StartCoroutine(BakeRoutine());
-    }
-
-    IEnumerator BakeRoutine()
-    {
-        // Attendre que tous les objets soient bien instanciés dans la scène
         yield return new WaitForSeconds(bakeDelay);
+        yield return null;
+        yield return null;
 
         if (surface == null)
         {
-            Debug.LogError("NavMeshBaker : surface est null, bake annulé !");
+            Debug.LogError("NavMeshBaker : surface est null, bake annulÃ© !");
             yield break;
         }
 
         float startTime = Time.realtimeSinceStartup;
-
-        // Reconstruit le NavMesh complet sur la géométrie actuelle
         surface.BuildNavMesh();
-
         float ms = (Time.realtimeSinceStartup - startTime) * 1000f;
 
         if (logBakeTime)
-            Debug.Log($"NavMesh cuit en {ms:F1}ms — Les zombies peuvent naviguer !");
+            Debug.Log($"NavMesh baked en {ms:F1}ms â€” attente confirmation au point {navMeshCheckPoint}...");
+
+        // Attend que NavMesh soit queryable AU CENTRE DE LA MAP (pas Ã  Vector3.zero)
+        float elapsed = 0f;
+        NavMeshHit hit;
+        while (elapsed < bakeTimeout)
+        {
+            if (NavMesh.SamplePosition(navMeshCheckPoint, out hit, 50f, NavMesh.AllAreas))
+            {
+                Debug.Log($"NavMesh confirmÃ© actif (+{elapsed * 1000f:F0}ms) !");
+                yield break;
+            }
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Debug.LogWarning($"NavMeshBaker : timeout â€” NavMesh pas dÃ©tectÃ© autour de {navMeshCheckPoint}. VÃ©rifie le NavMeshSurface !");
     }
 }

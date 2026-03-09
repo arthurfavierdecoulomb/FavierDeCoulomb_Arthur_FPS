@@ -322,7 +322,7 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 8
-  bulletScale: 2
+  bulletScale: 5
 --- !u!54 &3643463881271287292
 Rigidbody:
   m_ObjectHideFlags: 0
