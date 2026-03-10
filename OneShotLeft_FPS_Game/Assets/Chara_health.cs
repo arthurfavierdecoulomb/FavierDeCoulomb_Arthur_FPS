@@ -68,6 +68,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (DeathScreen != null)
             DeathScreen.ShowDeathScreen();
+            Debug.Log("DeathScreen affiché");
 
         PlayerMovement pm = GetComponent<PlayerMovement>();
         if (pm != null) pm.enabled = false;

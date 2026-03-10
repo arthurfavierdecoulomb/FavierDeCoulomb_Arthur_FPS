@@ -158,7 +158,7 @@ public class LoadingScreen : MonoBehaviour
         yield return new WaitForSeconds(3f);
 
         // ── PHASE 4 : Barre de progression ────────────────────────────────
-        StopAllCoroutines();
+        // NOTE : StopAllCoroutines() supprimé — il tuait GenerateMapRoutine() dans MapGenerator
         introPanel.SetActive(false);
         progressPanel.SetActive(true);
     }

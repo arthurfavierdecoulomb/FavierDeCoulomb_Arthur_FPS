@@ -38,6 +38,16 @@ public class DeathScreen : MonoBehaviour
     [Header("Boutons - Alignement horizontal")]
     [SerializeField] private float buttonSpacing = 120f;
 
+    [Header("Sons")]
+    [Tooltip("Son d'impact joué quand le titre apparaît")]
+    [SerializeField] private AudioClip titleImpactSound;
+    [Tooltip("Bip joué à chaque lettre du typewriter")]
+    [SerializeField] private AudioClip typewriterTickSound;
+    [SerializeField][Range(0f, 1f)] private float titleSoundVolume = 1f;
+    [SerializeField][Range(0f, 1f)] private float typewriterVolume = 0.4f;
+
+    private AudioSource audioSource;
+
     [Header("Messages aléatoires")]
     private string[] deathTitles = new string[]
     {
@@ -73,15 +83,28 @@ public class DeathScreen : MonoBehaviour
 
     private string currentMessage = "";
 
+    // ─────────────────────────────────────────────────────────────────────
     void Start()
     {
-        HideDeathScreen();
+        // Active le panel d'abord pour pouvoir accéder aux enfants
+        if (deathScreenPanel != null) deathScreenPanel.SetActive(true);
 
-        if (respawnButton != null)
-            respawnButton.onClick.AddListener(OnRespawnClicked);
+        // Cache tous les enfants proprement
+        if (respawnButton != null) respawnButton.gameObject.SetActive(false);
+        if (quitButton != null) quitButton.gameObject.SetActive(false);
+        if (motivationalText != null) motivationalText.gameObject.SetActive(false);
+        if (mainTitleText != null) mainTitleText.gameObject.SetActive(false);
+        if (darkOverlay != null) darkOverlay.gameObject.SetActive(false);
 
-        if (quitButton != null)
-            quitButton.onClick.AddListener(OnQuitClicked);
+        // Cache le panel entier APRÈS avoir géré les enfants
+        if (deathScreenPanel != null) deathScreenPanel.SetActive(false);
+
+        if (gameUIPanel != null) gameUIPanel.SetActive(true);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (respawnButton != null) respawnButton.onClick.AddListener(OnRespawnClicked);
+        if (quitButton != null) quitButton.onClick.AddListener(OnQuitClicked);
 
         playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (playerHealth == null)
@@ -91,26 +114,39 @@ public class DeathScreen : MonoBehaviour
             mapGenerator = FindFirstObjectByType<MapGenerator>();
         if (mapGenerator == null)
             Debug.LogWarning("MapGenerator non trouvé dans la scène !");
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     public void ShowDeathScreen()
     {
         if (deathScreenPanel == null) return;
 
         StopAllCoroutines();
 
+        // Active le panel EN PREMIER pour que les enfants soient accessibles
+        deathScreenPanel.SetActive(true);
+
+        // Force la réactivation de tous les enfants — corrige le bug où
+        // SetActive(false) sur le panel parent bloque les enfants
+        foreach (Transform child in deathScreenPanel.transform)
+            child.gameObject.SetActive(true);
+
         string chosenTitle = deathTitles[Random.Range(0, deathTitles.Length)];
         currentMessage = motivationalMessages[Random.Range(0, motivationalMessages.Length)];
 
+        // Puis reset les enfants
         ResetUIElements();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        deathScreenPanel.SetActive(true);
-
-        if (gameUIPanel != null)
-            gameUIPanel.SetActive(false);
+        if (gameUIPanel != null) gameUIPanel.SetActive(false);
 
         if (mainTitleText != null)
         {
@@ -130,11 +166,13 @@ public class DeathScreen : MonoBehaviour
         StartCoroutine(DeathScreenAnimation());
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     private IEnumerator DeathScreenAnimation()
     {
         // PHASE 1 : Tremblement du titre
         if (mainTitleText != null)
         {
+            PlaySound(titleImpactSound, titleSoundVolume);
             float elapsed = 0f;
             Vector3 center = new Vector2(0, 0);
             while (elapsed < titleShakeDuration)
@@ -168,30 +206,36 @@ public class DeathScreen : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        // PHASE 3 : Texte motivationnel
+        // PHASE 3 : Texte motivationnel slide + fade + typewriter
         if (motivationalText != null)
         {
             motivationalText.gameObject.SetActive(true);
             float elapsed = 0f;
             Vector3 startPos = new Vector2(0, motivationalFinalYPosition - slideDistance);
             Vector3 endPos = new Vector2(0, motivationalFinalYPosition);
-            Color col = motivationalText.color; col.a = 0f; motivationalText.color = col;
+            Color col = motivationalText.color;
+            col.a = 0f;
+            motivationalText.color = col;
 
             while (elapsed < slideDuration)
             {
                 elapsed += Time.deltaTime;
                 float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(elapsed / slideDuration), 3f);
                 motivationalText.rectTransform.anchoredPosition = Vector3.Lerp(startPos, endPos, t);
-                col.a = t; motivationalText.color = col;
+                col.a = t;
+                motivationalText.color = col;
                 yield return null;
             }
             motivationalText.rectTransform.anchoredPosition = endPos;
-            col.a = 1f; motivationalText.color = col;
+            col.a = 1f;
+            motivationalText.color = col;
 
             motivationalText.text = "";
             foreach (char c in currentMessage)
             {
                 motivationalText.text += c;
+                if (c != ' ')
+                    PlaySound(typewriterTickSound, typewriterVolume);
                 yield return new WaitForSeconds(typewriterSpeed);
             }
         }
@@ -226,21 +270,36 @@ public class DeathScreen : MonoBehaviour
         if (quitButton != null) { quitButton.GetComponent<RectTransform>().anchoredPosition = qEnd; if (qCG != null) qCG.alpha = 1f; }
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    void PlaySound(AudioClip clip, float volume)
+    {
+        if (audioSource == null || clip == null) return;
+        audioSource.PlayOneShot(clip, volume);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     public void HideDeathScreen()
     {
+        StopAllCoroutines();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        StopAllCoroutines();
+
+        // Active le panel pour accéder aux enfants
+        if (deathScreenPanel != null) deathScreenPanel.SetActive(true);
 
         if (respawnButton != null) respawnButton.gameObject.SetActive(false);
         if (quitButton != null) quitButton.gameObject.SetActive(false);
         if (motivationalText != null) motivationalText.gameObject.SetActive(false);
         if (mainTitleText != null) mainTitleText.gameObject.SetActive(false);
         if (darkOverlay != null) darkOverlay.gameObject.SetActive(false);
+
+        // Cache le panel entier après
         if (deathScreenPanel != null) deathScreenPanel.SetActive(false);
+
         if (gameUIPanel != null) gameUIPanel.SetActive(true);
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     private void ResetUIElements()
     {
         if (mainTitleText != null) { mainTitleText.gameObject.SetActive(true); mainTitleText.rectTransform.anchoredPosition = Vector2.zero; }
@@ -250,11 +309,8 @@ public class DeathScreen : MonoBehaviour
         if (darkOverlay != null) darkOverlay.gameObject.SetActive(true);
     }
 
-    void OnRespawnClicked()
-    {
-        // On recharge directement sans cacher l'UI — la scène repart de zéro
-        RegenerateMapAndRespawn();
-    }
+    // ─────────────────────────────────────────────────────────────────────
+    void OnRespawnClicked() => RegenerateMapAndRespawn();
 
     void OnQuitClicked()
     {
@@ -267,7 +323,6 @@ public class DeathScreen : MonoBehaviour
 
     void RegenerateMapAndRespawn()
     {
-        // Recharge la scène entière — propre, sans risque de crash mémoire
         UnityEngine.SceneManagement.SceneManager.LoadScene(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
         );

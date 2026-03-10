@@ -13,22 +13,27 @@ public class DoorZone : MonoBehaviour
     [Header("Comportement")]
     [Tooltip("Délai en secondes avant que la porte se referme après que le déclencheur soit sorti.")]
     [SerializeField] private float closeDelay = 1.5f;
-
-    [Tooltip("Distance devant/derrière la porte où le joueur/zombie est détecté.")]
     [SerializeField] private float detectionDepth = 2.5f;
     [SerializeField] private float detectionWidth = 2f;
 
     [Header("Zombies")]
-    [Tooltip("Les zombies peuvent ouvrir la porte en passant dedans.")]
     [SerializeField] private bool zombiesCanOpen = true;
-
-    [Tooltip("Tag utilisé sur les zombies (doit correspondre à celui de tes prefabs).")]
     [SerializeField] private string zombieTag = "Zombie";
 
-    [Header("Sons (optionnel)")]
+    [Header("Sons")]
     [SerializeField] private AudioClip openSound;
     [SerializeField] private AudioClip closeSound;
+
+    [Header("Atténuation par distance")]
+    [Tooltip("Distance en dessous de laquelle le volume est maximal.")]
+    [SerializeField] private float minDistance = 3f;
+    [Tooltip("Distance au-delà de laquelle le son est inaudible.")]
+    [SerializeField] private float maxDistance = 20f;
+    [Tooltip("Volume maximal quand le joueur est tout proche.")]
+    [SerializeField][Range(0f, 1f)] private float maxVolume = 1f;
+
     private AudioSource audioSource;
+    private Transform playerTransform;
 
     // Rotations cible
     private Quaternion closedRotation;
@@ -37,10 +42,10 @@ public class DoorZone : MonoBehaviour
     // État
     private bool isOpen = false;
     private bool isMoving = false;
-    private int inZoneCount = 0;   // joueurs + zombies dans la zone
+    private int inZoneCount = 0;
     private float closeTimer = -1f;
 
-    // ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
     void Start()
     {
         Init();
@@ -57,6 +62,10 @@ public class DoorZone : MonoBehaviour
             Collider col = GetComponent<Collider>();
             if (col != null) col.isTrigger = true;
         }
+
+        // Trouve le joueur une seule fois
+        GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null) playerTransform = playerGO.transform;
     }
 
     public void SetupFromGenerator(float angle, float openSpd, float closeSpd, float delay = 0f)
@@ -77,9 +86,15 @@ public class DoorZone : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null && (openSound != null || closeSound != null))
             audioSource = gameObject.AddComponent<AudioSource>();
+
+        if (audioSource != null)
+        {
+            audioSource.spatialBlend = 0f; // on gère le volume manuellement
+            audioSource.playOnAwake = false;
+        }
     }
 
-    // ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
     void Update()
     {
         if (closeTimer >= 0f)
@@ -104,23 +119,19 @@ public class DoorZone : MonoBehaviour
         }
     }
 
-    // ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
     void OnTriggerEnter(Collider other)
     {
         if (!IsAllowed(other)) return;
-
         inZoneCount++;
         closeTimer = -1f;
-
         if (!isOpen) Open();
     }
 
     void OnTriggerExit(Collider other)
     {
         if (!IsAllowed(other)) return;
-
         inZoneCount = Mathf.Max(0, inZoneCount - 1);
-
         if (inZoneCount == 0)
         {
             if (closeDelay > 0f) closeTimer = closeDelay;
@@ -128,7 +139,6 @@ public class DoorZone : MonoBehaviour
         }
     }
 
-    // ─── Vérifie si le collider est autorisé à ouvrir la porte ───────────
     bool IsAllowed(Collider other)
     {
         if (other.CompareTag("Player")) return true;
@@ -136,7 +146,7 @@ public class DoorZone : MonoBehaviour
         return false;
     }
 
-    // ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
     void Open()
     {
         isOpen = true;
@@ -154,35 +164,61 @@ public class DoorZone : MonoBehaviour
 
     void PlaySound(AudioClip clip)
     {
-        if (audioSource != null && clip != null)
-            audioSource.PlayOneShot(clip);
+        if (audioSource == null || clip == null) return;
+
+        float vol = GetVolumeByDistance();
+        if (vol <= 0f) return; // trop loin, on ne joue même pas le son
+
+        audioSource.PlayOneShot(clip, vol);
     }
 
-    // ─────────────────────────────────────────────
+    // ─── Volume calculé selon la distance au joueur ───────────────────────
+    float GetVolumeByDistance()
+    {
+        if (playerTransform == null)
+        {
+            // Cherche le joueur si pas encore trouvé
+            GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+            if (playerGO != null) playerTransform = playerGO.transform;
+            else return maxVolume; // pas de joueur trouvé : volume max par défaut
+        }
+
+        float dist = Vector3.Distance(transform.position, playerTransform.position);
+
+        if (dist <= minDistance) return maxVolume;
+        if (dist >= maxDistance) return 0f;
+
+        // Interpolation linéaire entre minDistance et maxDistance
+        float t = 1f - Mathf.InverseLerp(minDistance, maxDistance, dist);
+        return Mathf.Lerp(0f, maxVolume, t);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     void OnDrawGizmosSelected()
     {
+        // Zone de détection
         Collider col = GetComponent<Collider>();
-        if (col == null) return;
-
-        Gizmos.color = new Color(0f, 1f, 0.5f, 0.35f);
-
-        if (col is BoxCollider box)
+        if (col != null)
         {
-            Matrix4x4 prev = Gizmos.matrix;
-            Gizmos.matrix = Matrix4x4.TRS(
-                transform.TransformPoint(box.center),
-                transform.rotation,
-                transform.lossyScale
-            );
-            Gizmos.DrawCube(Vector3.zero, box.size);
-            Gizmos.DrawWireCube(Vector3.zero, box.size);
-            Gizmos.matrix = prev;
+            Gizmos.color = new Color(0f, 1f, 0.5f, 0.35f);
+            if (col is BoxCollider box)
+            {
+                Matrix4x4 prev = Gizmos.matrix;
+                Gizmos.matrix = Matrix4x4.TRS(
+                    transform.TransformPoint(box.center),
+                    transform.rotation,
+                    transform.lossyScale
+                );
+                Gizmos.DrawCube(Vector3.zero, box.size);
+                Gizmos.DrawWireCube(Vector3.zero, box.size);
+                Gizmos.matrix = prev;
+            }
         }
-        else if (col is SphereCollider sphere)
-        {
-            float r = sphere.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z);
-            Gizmos.DrawSphere(transform.TransformPoint(sphere.center), r);
-            Gizmos.DrawWireSphere(transform.TransformPoint(sphere.center), r);
-        }
+
+        // Cercles de distance audio
+        Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
+        Gizmos.DrawWireSphere(transform.position, minDistance);
+        Gizmos.color = new Color(1f, 0.4f, 0f, 0.25f);
+        Gizmos.DrawWireSphere(transform.position, maxDistance);
     }
 }

@@ -66,6 +66,10 @@ public class MapGenerator : MonoBehaviour
     [Header("UI")]
     [Tooltip("L'UI du jeu à cacher pendant le chargement")]
     [SerializeField] private GameObject gameUIPanel;
+    [Tooltip("Panel de mort à cacher pendant la génération")]
+    [SerializeField] private GameObject deathScreenPanel;
+    [Tooltip("Panel de victoire à cacher pendant la génération")]
+    [SerializeField] private GameObject victoryScreenPanel;
 
     // ── PATCH WaveManager ─────────────────────────────────────────────────
     [Header("Ennemis")]
@@ -295,7 +299,8 @@ public class MapGenerator : MonoBehaviour
 
         int maxObjects = mapWidth * mapHeight * 16;
         int sc = 0;
-        int tilesPerFrame = Mathf.Max(1, 8);
+        // Adapte le nombre de tiles par frame selon la taille de map
+        int tilesPerFrame = Mathf.Clamp(mapWidth * mapHeight / 200, 2, 12);
         int counter = 0;
 
         for (int x = 0; x < mapWidth; x++)

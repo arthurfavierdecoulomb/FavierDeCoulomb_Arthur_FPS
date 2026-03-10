@@ -50,6 +50,15 @@ public class VictoryScreen : MonoBehaviour
         "On peut dire que tu as géré."
     };
 
+    [Header("Sons")]
+    [Tooltip("Son d'impact joué quand le titre apparaît")]
+    [SerializeField] private AudioClip titleImpactSound;
+    [Tooltip("Bip joué à chaque lettre du typewriter")]
+    [SerializeField] private AudioClip typewriterTickSound;
+    [SerializeField][Range(0f, 1f)] private float titleSoundVolume = 1f;
+    [SerializeField][Range(0f, 1f)] private float typewriterVolume = 0.4f;
+
+    private AudioSource audioSource;
     private string currentMessage = "";
 
     // ─────────────────────────────────────────────────────────────────────
@@ -59,6 +68,12 @@ public class VictoryScreen : MonoBehaviour
 
         if (replayButton != null) replayButton.onClick.AddListener(OnReplayClicked);
         if (quitButton != null) quitButton.onClick.AddListener(OnQuitClicked);
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -102,6 +117,7 @@ public class VictoryScreen : MonoBehaviour
         // PHASE 1 : Tremblement du titre
         if (mainTitleText != null)
         {
+            PlaySound(titleImpactSound, titleSoundVolume); // impact au moment où le titre apparaît
             float elapsed = 0f;
             Vector3 center = Vector2.zero;
             while (elapsed < titleShakeDuration)
@@ -164,6 +180,8 @@ public class VictoryScreen : MonoBehaviour
             foreach (char c in currentMessage)
             {
                 motivationalText.text += c;
+                if (c != ' ') // pas de bip sur les espaces
+                    PlaySound(typewriterTickSound, typewriterVolume);
                 yield return new WaitForSeconds(typewriterSpeed);
             }
         }
@@ -229,6 +247,21 @@ public class VictoryScreen : MonoBehaviour
         if (replayButton != null) replayButton.gameObject.SetActive(false);
         if (quitButton != null) quitButton.gameObject.SetActive(false);
         if (darkOverlay != null) darkOverlay.gameObject.SetActive(true);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    void PlaySound(AudioClip clip, float volume)
+    {
+        if (audioSource == null || clip == null) return;
+        audioSource.PlayOneShot(clip, volume);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    void Update()
+    {
+        // DEBUG : appuie sur V pour tester l'écran de victoire
+        if (Input.GetKeyDown(KeyCode.V))
+            ShowVictoryScreen();
     }
 
     // ─────────────────────────────────────────────────────────────────────

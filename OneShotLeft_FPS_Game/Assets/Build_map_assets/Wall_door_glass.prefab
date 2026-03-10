@@ -77,8 +77,8 @@ MonoBehaviour:
   detectionWidth: 2
   zombiesCanOpen: 1
   zombieTag: Zombie
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
+  openSound: {fileID: 8300000, guid: 41c1b10e74d7b3c41b6a92d9551de33a, type: 3}
+  closeSound: {fileID: 8300000, guid: 62622973cdfd1984bb7302347c9b7292, type: 3}
 --- !u!1 &7356331897866542184
 GameObject:
   m_ObjectHideFlags: 0

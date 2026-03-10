@@ -32,16 +32,18 @@ public class PlayerMovement : MonoBehaviour
     private float currentCameraHeight;
     private float targetCameraHeight;
     private StaminaSystem staminaSystem;
+    private PlayerFootsteps footsteps;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
         staminaSystem = GetComponent<StaminaSystem>();
+        footsteps = GetComponent<PlayerFootsteps>();
+
         currentHeight = standingHeight;
         targetHeight = standingHeight;
         controller.height = standingHeight;
 
-        // Initialiser la hauteur de la caméra
         if (cameraTransform != null)
         {
             currentCameraHeight = standingCameraHeight;
@@ -57,7 +59,6 @@ public class PlayerMovement : MonoBehaviour
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        // Gérer le sprint (Shift + avancer, pas en crouch)
         bool canSprint = staminaSystem == null || staminaSystem.CanSprint();
         isSprinting = Input.GetKey(sprintKey) && z > 0.1f && !isCrouching && controller.isGrounded && canSprint;
 
@@ -65,20 +66,19 @@ public class PlayerMovement : MonoBehaviour
         Vector3 move = transform.right * x + transform.forward * z;
 
         if (controller.isGrounded && velocity.y < 0)
-        {
             velocity.y = -2f;
-        }
 
-        // Saut uniquement si debout et au sol
+        // Saut
         if (Input.GetButtonDown("Jump") && !isCrouching && controller.isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+
+            // Son de saut
+            if (footsteps != null) footsteps.OnJump();
         }
 
-        // Appliquer la gravité
         velocity.y += gravity * Time.deltaTime;
 
-        // Mouvement
         Vector3 finalMove = move * speed + Vector3.up * velocity.y;
         controller.Move(finalMove * Time.deltaTime);
 
@@ -88,10 +88,8 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleCrouch()
     {
-        // Vérifier si le joueur a assez de stamina pour s'accroupir
         bool canCrouch = staminaSystem == null || staminaSystem.CanCrouch();
 
-        // Définir la hauteur cible
         if (Input.GetKey(KeyCode.LeftControl) && canCrouch)
         {
             targetHeight = crouchHeight;
@@ -100,15 +98,12 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // Force le joueur à se relever si plus assez de stamina
             if (isCrouching && !canCrouch)
             {
-                // Force le relevé même sous un plafond
                 targetHeight = standingHeight;
                 targetCameraHeight = standingCameraHeight;
                 isCrouching = false;
             }
-            // Sinon vérifie s'il y a de la place pour se lever normalement
             else if (CanStandUp())
             {
                 targetHeight = standingHeight;
@@ -117,17 +112,13 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        // Transition progressive de la hauteur
         if (Mathf.Abs(currentHeight - targetHeight) > 0.01f)
         {
             float previousHeight = currentHeight;
             currentHeight = Mathf.Lerp(currentHeight, targetHeight, Time.deltaTime * crouchTransitionSpeed);
 
-            // Ajuster le centre pour que les pieds restent au sol
             Vector3 center = controller.center;
-            float heightDifference = currentHeight - previousHeight;
-            center.y += heightDifference / 2f;
-
+            center.y += (currentHeight - previousHeight) / 2f;
             controller.height = currentHeight;
             controller.center = center;
         }
@@ -137,11 +128,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (cameraTransform == null) return;
 
-        // Transition fluide de la caméra
         if (Mathf.Abs(currentCameraHeight - targetCameraHeight) > 0.001f)
         {
             currentCameraHeight = Mathf.Lerp(currentCameraHeight, targetCameraHeight, Time.deltaTime * cameraTransitionSpeed);
-
             Vector3 camPos = cameraTransform.localPosition;
             camPos.y = currentCameraHeight;
             cameraTransform.localPosition = camPos;
@@ -150,36 +139,14 @@ public class PlayerMovement : MonoBehaviour
 
     bool CanStandUp()
     {
-        // Raycast pour vérifier si on peut se lever
         float checkDistance = standingHeight - crouchHeight;
         Vector3 startPos = transform.position + Vector3.up * crouchHeight;
-
         return !Physics.Raycast(startPos, Vector3.up, checkDistance);
     }
 
-    // Méthodes publiques pour le WeaponController
-    public bool IsGrounded()
-    {
-        return controller.isGrounded;
-    }
-
-    public bool IsCrouching()
-    {
-        return isCrouching;
-    }
-
-    public bool IsSprinting()
-    {
-        return isSprinting;
-    }
-
-    public float GetCurrentSpeed()
-    {
-        return isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
-    }
-
-    public float GetCurrentCameraHeight()
-    {
-        return currentCameraHeight;
-    }
+    public bool IsGrounded() => controller.isGrounded;
+    public bool IsCrouching() => isCrouching;
+    public bool IsSprinting() => isSprinting;
+    public float GetCurrentSpeed() => isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
+    public float GetCurrentCameraHeight() => currentCameraHeight;
 }
