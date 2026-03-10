@@ -41,13 +41,37 @@ public class LoadingScreen : MonoBehaviour
     [SerializeField] private float circleZoomOutDur = 0.7f;
     [SerializeField] private float smoothSpeed = 5f;
 
+    [Header("Sons")]
+    [Tooltip("Bip joué à chaque chiffre du countdown (TEN → TWO)")]
+    [SerializeField] private AudioClip tickSound;
+
+    [Tooltip("Son d'impact quand ONE apparaît")]
+    [SerializeField] private AudioClip oneSound;
+
+    [Tooltip("Whoosh/impact quand SHOT apparaît")]
+    [SerializeField] private AudioClip shotSound;
+
+    [Tooltip("Whoosh/impact quand LEFT apparaît")]
+    [SerializeField] private AudioClip leftSound;
+
+    [SerializeField][Range(0f, 1f)] private float introVolume = 1f;
+
+    private AudioSource audioSource;
     private float targetProgress = 0f;
     private float currentProgress = 0f;
 
+    // ─────────────────────────────────────────────────────────────────────
     void Awake()
     {
         Instance = this;
         loadingPanel.SetActive(false);
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
     }
 
     void Update()
@@ -57,6 +81,7 @@ public class LoadingScreen : MonoBehaviour
             barreFill.fillAmount = currentProgress;
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     public void Show()
     {
         currentProgress = 0f;
@@ -99,29 +124,38 @@ public class LoadingScreen : MonoBehaviour
 
         string[] numbers = { "TEN", "NINE", "EIGHT", "SEVEN", "SIX", "FIVE", "FOUR", "THREE", "TWO", "ONE" };
 
-        // ── PHASE 1 : Décompte TEN → ONE ──────────────────────────────────
+        // ── PHASE 1 : Décompte TEN → TWO avec bip ─────────────────────────
         float duration = firstNumberDuration;
-        for (int i = 0; i < numbers.Length; i++)
+        for (int i = 0; i < numbers.Length - 1; i++) // s'arrête avant ONE
         {
             txtCountdown.text = numbers[i];
+            PlaySound(tickSound);
             yield return new WaitForSeconds(duration);
             duration *= speedUpFactor;
         }
 
         // ── PHASE 2 : ONE, SHOT, LEFT apparaissent ────────────────────────
         txtCountdown.gameObject.SetActive(false);
+
+        // ONE — son d'impact
         txtOne.gameObject.SetActive(true);
+        PlaySound(oneSound);
         yield return new WaitForSeconds(0.15f);
 
+        // SHOT — whoosh/impact + shake
         txtShot.gameObject.SetActive(true);
+        PlaySound(shotSound);
         yield return StartCoroutine(ShakeText(txtShot, shakeDuration, shakeIntensity));
         yield return new WaitForSeconds(0.1f);
 
+        // LEFT — whoosh/impact + shake
         txtLeft.gameObject.SetActive(true);
+        PlaySound(leftSound);
         yield return StartCoroutine(ShakeText(txtLeft, shakeDuration, shakeIntensity));
         yield return new WaitForSeconds(0.4f);
 
-       
+        // Laisse le temps aux sound effects de se terminer
+        yield return new WaitForSeconds(3f);
 
         // ── PHASE 4 : Barre de progression ────────────────────────────────
         StopAllCoroutines();
@@ -133,7 +167,6 @@ public class LoadingScreen : MonoBehaviour
     IEnumerator ZoomOutCircleWithLogo()
     {
         float elapsed = 0f;
-
         while (elapsed < circleZoomOutDur)
         {
             elapsed += Time.deltaTime;
@@ -148,12 +181,16 @@ public class LoadingScreen : MonoBehaviour
             logoGroup.localScale = new Vector3(sx, sy, 1f);
             yield return null;
         }
-
         circleBG.localScale = Vector3.zero;
         logoGroup.localScale = Vector3.zero;
     }
 
-    
+    // ─── Son ─────────────────────────────────────────────────────────────
+    void PlaySound(AudioClip clip)
+    {
+        if (audioSource == null || clip == null) return;
+        audioSource.PlayOneShot(clip, introVolume);
+    }
 
     // ─── Tremblement ponctuel ─────────────────────────────────────────────
     IEnumerator ShakeText(TextMeshProUGUI txt, float dur, float intensity)

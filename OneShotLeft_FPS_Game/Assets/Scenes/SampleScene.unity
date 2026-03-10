@@ -1065,6 +1065,10 @@ MonoBehaviour:
   firePoint: {fileID: 1387186515}
   explosionEffect: {fileID: 8370851503846864722, guid: 350ce88389591de4e91c2eafeb461ca5, type: 3}
   explosionOffset: {x: -0.7, y: 0.4, z: 0}
+  shootSound: {fileID: 8300000, guid: 62fb3606ff2a8bd43b9b8d1e9c7a7ff2, type: 3}
+  reloadSound: {fileID: 8300000, guid: 4a846265cad8e1248907d0b6e23665de, type: 3}
+  emptySound: {fileID: 8300000, guid: 90ea2b8cff89e5b449ecb1bf97ba3dd4, type: 3}
+  weaponVolume: 1
 --- !u!4 &188950719 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1151388028547126963, guid: ebba628353612364cb82c59bc16a4605, type: 3}
@@ -5395,6 +5399,9 @@ MonoBehaviour:
   cameraBob: {fileID: 330585549}
   shakeDuration: 0.15
   shakeIntensity: 0.15
+  hurtSound: {fileID: 8300000, guid: 7d7ba979c0060a045a87731986e86ce4, type: 3}
+  deathSound: {fileID: 8300000, guid: 58d5354e30844374c9e6ad270e1eca94, type: 3}
+  hurtVolume: 1
 --- !u!1 &1390123608
 GameObject:
   m_ObjectHideFlags: 0

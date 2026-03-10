@@ -120,6 +120,10 @@ public class MapGenerator : MonoBehaviour
         if (!ValidateParameters()) yield break;
         isGenerating = true;
 
+        // Lance le son d'ambiance
+        AtmosphereManager atmo = FindFirstObjectByType<AtmosphereManager>();
+        if (atmo != null) atmo.StartAtmosphere();
+
         roomCount = Mathf.Max(1, roomCount);
         mapWidth = Mathf.Max(10, mapWidth);
         mapHeight = Mathf.Max(10, mapHeight);

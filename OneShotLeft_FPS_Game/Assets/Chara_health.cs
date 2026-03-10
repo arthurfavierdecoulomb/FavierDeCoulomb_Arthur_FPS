@@ -1,18 +1,27 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health")]
     [SerializeField] private int maxHealth = 100;
     private int currentHealth;
+    private bool isDead = false;
 
     [Header("Camera Shake")]
     [SerializeField] private CameraBob cameraBob;
     [SerializeField] private float shakeDuration = 0.15f;
     [SerializeField] private float shakeIntensity = 0.15f;
 
+    [Header("Sons")]
+    [Tooltip("Son jou√© quand le joueur prend des d√©g√¢ts")]
+    [SerializeField] private AudioClip hurtSound;
+    [Tooltip("Son jou√© quand le joueur meurt")]
+    [SerializeField] private AudioClip deathSound;
+    [SerializeField][Range(0f, 1f)] private float hurtVolume = 1f;
+
     [Header("Death Screen")]
     private DeathScreen DeathScreen;
+    private AudioSource audioSource;
 
     void Start()
     {
@@ -21,16 +30,22 @@ public class PlayerHealth : MonoBehaviour
         if (cameraBob == null)
             cameraBob = GetComponentInChildren<CameraBob>();
 
-        // Trouve l'Ècran de mort dans la scËne
         DeathScreen = FindFirstObjectByType<DeathScreen>();
         if (DeathScreen == null)
-        {
-            Debug.LogWarning("DeathScreenSimple non trouvÈ dans la scËne !");
-        }
+            Debug.LogWarning("DeathScreen non trouv√© dans la sc√®ne !");
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
     }
 
     public void TakeDamage(int damage)
     {
+        if (isDead) return; // ignore les d√©g√¢ts si d√©j√† mort
+
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
@@ -39,57 +54,58 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHealth <= 0)
             Die();
+        else
+            PlaySound(hurtSound);
     }
 
     private void Die()
     {
+        if (isDead) return; // s√©curit√© anti double-appel
+        isDead = true;
+
         Debug.Log("Player Dead");
+        PlaySound(deathSound);
 
-        // Affiche l'Ècran de mort
         if (DeathScreen != null)
-        {
             DeathScreen.ShowDeathScreen();
-        }
 
-        // Optionnel : dÈsactive les contrÙles du joueur
-        GetComponent<PlayerMovement>().enabled = false;
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        if (pm != null) pm.enabled = false;
     }
 
     public void Respawn()
     {
-        // RÈinitialise la vie
+        isDead = false;
         currentHealth = maxHealth;
 
-        // RÈactive les contrÙles
-        GetComponent<PlayerMovement>().enabled = true;
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        if (pm != null) pm.enabled = true;
 
-        // Repositionne le joueur (optionnel)
-        transform.position = Vector3.zero; // ou ta position de spawn
-
+        transform.position = Vector3.zero;
         Debug.Log("Player respawned with full health!");
     }
 
-    public int GetHealth()
+    void PlaySound(AudioClip clip)
     {
-        return currentHealth;
+        if (audioSource == null || clip == null) return;
+        audioSource.PlayOneShot(clip, hurtVolume);
     }
+
+    public int GetHealth() => currentHealth;
 
     void Update()
     {
-        // DEBUG : test des dÈg‚ts avec une touche
         if (Input.GetKeyDown(KeyCode.H))
         {
             TakeDamage(10);
-            Debug.Log("DEBUG : dÈg‚ts test (-10 HP)");
+            Debug.Log("DEBUG : d√©g√¢ts test (-10 HP)");
         }
-
-        // DEBUG : test Ècran de mort direct
         if (Input.GetKeyDown(KeyCode.M))
         {
             if (DeathScreen != null)
             {
                 DeathScreen.ShowDeathScreen();
-                Debug.Log("DEBUG : …cran de mort affichÈ");
+                Debug.Log("DEBUG : √âcran de mort affich√©");
             }
         }
     }

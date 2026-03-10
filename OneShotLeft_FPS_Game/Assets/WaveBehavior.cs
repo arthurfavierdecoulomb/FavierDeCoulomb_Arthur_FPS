@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using UnityEngine.AI;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// Gestionnaire de vagues de zombies.
@@ -24,9 +24,6 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Le joueur (pour exclure sa zone du spawn)")]
     [SerializeField] private GameObject player;
-
-    [Tooltip("Panel de victoire affiché après la dernière vague")]
-    [SerializeField] private GameObject victoryPanel;
 
     // ── Paramètres des vagues ─────────────────────────────────────────────
     [Header("Paramètres des vagues")]
@@ -70,7 +67,6 @@ public class WaveManager : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────
     void Start()
     {
-        if (victoryPanel != null) victoryPanel.SetActive(false);
     }
 
     /// <summary>
@@ -234,7 +230,13 @@ public class WaveManager : MonoBehaviour
     void TriggerVictory()
     {
         gameFinished = true;
-        if (victoryPanel != null) victoryPanel.SetActive(true);
+
+        // Appelle le VictoryScreen s'il existe dans la scène
+        VictoryScreen vs = Object.FindFirstObjectByType<VictoryScreen>();
+        if (vs != null)
+            vs.ShowVictoryScreen();
+        else
+            Debug.LogWarning("WaveManager: VictoryScreen non trouvé dans la scène !");
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;

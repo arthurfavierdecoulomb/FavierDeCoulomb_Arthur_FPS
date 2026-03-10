@@ -138,13 +138,13 @@ MonoBehaviour:
   damage: 25
   range: 100
   fireRate: 0.3
-  bulletPrefab: {fileID: 0}
+  bulletPrefab: {fileID: 7697165959854304526, guid: 80ca82c77dfb8424b82ad7279c1d3df5, type: 3}
   bulletSpawnPoint: {fileID: 9122313146624944185}
   maxBullets: 1
   positionOffset: {x: 0.35, y: -0.22, z: 2.09}
   rotationOffset: {x: -20.21, y: 86.08, z: 0}
   muzzleFlash: {fileID: 4883176116909229379, guid: 350ce88389591de4e91c2eafeb461ca5, type: 3}
-  firePoint: {fileID: 0}
+  firePoint: {fileID: 2023931425155894681, guid: 350ce88389591de4e91c2eafeb461ca5, type: 3}
   explosionEffect: {fileID: 8370851503846864722, guid: 350ce88389591de4e91c2eafeb461ca5, type: 3}
   explosionOffset: {x: -0.7, y: 0.4, z: 0}
 --- !u!4 &9122313146624944185 stripped

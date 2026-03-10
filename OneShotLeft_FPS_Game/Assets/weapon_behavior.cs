@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class WeaponController : MonoBehaviour
 {
@@ -27,32 +27,51 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private GameObject explosionEffect;
     [SerializeField] private Vector3 explosionOffset = new Vector3(0, 0, 0.4f);
 
+    [Header("Sons")]
+    [Tooltip("Son joué à chaque tir")]
+    [SerializeField] private AudioClip shootSound;
+    [Tooltip("Son joué quand la balle est récupérée / rechargée")]
+    [SerializeField] private AudioClip reloadSound;
+    [Tooltip("Son joué quand on tire sans munitions")]
+    [SerializeField] private AudioClip emptySound;
+    [Tooltip("Volume général des sons de l'arme")]
+    [SerializeField][Range(0f, 1f)] private float weaponVolume = 1f;
+
+    private AudioSource audioSource;
     private float nextFireTime;
 
+    // ─────────────────────────────────────────────────────────────────────
     void Start()
     {
         if (fpsCamera == null)
             fpsCamera = Camera.main;
 
         currentBullets = maxBullets;
+
+        // Crée ou récupère l'AudioSource sur cet objet
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // son 2D (FPS = pas de positionnement 3D)
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
-        {
             TryShoot();
-        }
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     void TryShoot()
     {
         if (Time.time < nextFireTime) return;
 
-        // V�rifie s'il reste des balles
         if (currentBullets <= 0)
         {
-            Debug.Log("Plus de balles ! Recupere ta balle pour recharger");
+            PlaySound(emptySound);
+            Debug.Log("Plus de balles ! Récupère ta balle pour recharger");
             return;
         }
 
@@ -61,75 +80,63 @@ public class WeaponController : MonoBehaviour
         // Effets visuels
         Vector3 spawnPosition = transform.position + transform.TransformDirection(explosionOffset);
         GameObject myExplosion = Instantiate(explosionEffect, spawnPosition, transform.rotation);
-
         ParticleSystem ps = myExplosion.GetComponent<ParticleSystem>();
         if (ps != null)
         {
             ps.Play();
             Destroy(myExplosion, ps.main.duration + ps.main.startLifetime.constantMax);
         }
-        else
-        {
-            Destroy(myExplosion, 2f);
-        }
+        else Destroy(myExplosion, 2f);
 
-        if (muzzleFlash != null)
-            muzzleFlash.Play();
+        if (muzzleFlash != null) muzzleFlash.Play();
 
-        // Tire la balle physique
+        // Son de tir
+        PlaySound(shootSound);
+
         ShootBullet();
-
         currentBullets--;
-        Debug.Log("Tir ! Balles restantes: " + currentBullets);
+        Debug.Log("Tir ! Balles restantes : " + currentBullets);
     }
 
     void ShootBullet()
     {
-        if (bulletPrefab == null)
-        {
-            Debug.LogError("Bullet Prefab non assigne !");
-            return;
-        }
+        if (bulletPrefab == null) { Debug.LogError("Bullet Prefab non assigné !"); return; }
 
-        // D�termine la position de spawn
         Vector3 spawnPos = (bulletSpawnPoint != null) ? bulletSpawnPoint.position : fpsCamera.transform.position;
         Quaternion spawnRot = fpsCamera.transform.rotation;
 
-        // Cr�e la balle
         GameObject bullet = Instantiate(bulletPrefab, spawnPos, spawnRot);
-
-        // Donne la r�f�rence de l'arme � la balle
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         if (bulletScript != null)
-        {
             bulletScript.SetWeaponController(this);
-        }
     }
 
-    // Appel� par la balle quand elle est r�cup�r�e
+    // Appelé par la balle quand elle est récupérée
     public void ReloadBullet()
     {
         currentBullets = maxBullets;
-        Debug.Log("Balle rechargee !");
 
+        // Son de rechargement
+        PlaySound(reloadSound);
+
+        Debug.Log("Balle rechargée !");
         Debug.Log("Reload sur arme : " + gameObject.name);
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    void PlaySound(AudioClip clip)
+    {
+        if (audioSource == null || clip == null) return;
+        audioSource.PlayOneShot(clip, weaponVolume);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     void LateUpdate()
     {
         if (handTransform == null) return;
-
-        transform.position =
-            handTransform.position +
-            handTransform.rotation * positionOffset;
-
-        transform.rotation =
-            handTransform.rotation * Quaternion.Euler(rotationOffset);
+        transform.position = handTransform.position + handTransform.rotation * positionOffset;
+        transform.rotation = handTransform.rotation * Quaternion.Euler(rotationOffset);
     }
 
-    public int GetCurrentBullets()
-    {
-        return currentBullets;
-    }
-
+    public int GetCurrentBullets() => currentBullets;
 }
