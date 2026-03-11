@@ -2,15 +2,18 @@ using UnityEngine;
 
 public class CameraBob : MonoBehaviour
 {
-    [Header("Bob - Marche")]
+    [Header("Bob - Marche")] // paramètres de bobbing pour la marche, ajustables dans l'inspecteur pour
+                             // trouver le bon équilibre entre réalisme et confort visuel
     [SerializeField] private float walkBobAmount = 0.05f;
     [SerializeField] private float walkBobSpeed = 8f;
 
-    [Header("Bob - Sprint")]
+    [Header("Bob - Sprint")] // paramètres de bobbing pour le sprint, généralement
+                             // plus prononcés que pour la marche, ajustables dans l'inspecteur
     [SerializeField] private float sprintBobAmount = 0.1f;
     [SerializeField] private float sprintBobSpeed = 12f;
 
-    [Header("Breathe")]
+    [Header("Breathe")] // paramètres de respiration, qui ajoutent un léger mouvement même
+                        // lorsque le joueur est immobile, pour plus de réalisme
     [SerializeField] private float breathAmount = 0.015f;
     [SerializeField] private float breathSpeed = 1.5f;
 
