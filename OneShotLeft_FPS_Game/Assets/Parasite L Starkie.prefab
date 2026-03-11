@@ -489,8 +489,8 @@ MonoBehaviour:
   attackRange: 5
   attackCooldown: 1
   attackDamage: 20
-  detectionRange: 20
-  hearingRange: 6
+  detectionRange: 6.1
+  hearingRange: 6.21
   losePlayerTime: 4
   obstacleMask:
     serializedVersion: 2
