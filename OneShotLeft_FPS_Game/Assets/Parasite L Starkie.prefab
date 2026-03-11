@@ -506,3 +506,40 @@ MonoBehaviour:
   snapRadius: 4
   navCheckInterval: 0.4
   maxLinkTime: 2
+  snapGraceDelay: 2
+  walkFootsteps:
+  - {fileID: 8300000, guid: 0cc17c2ae37df9c42a49056d926fe22c, type: 3}
+  - {fileID: 8300000, guid: d6b8d2b37db166845a9abf9028545180, type: 3}
+  - {fileID: 8300000, guid: 7ae53d0bb561c1a47b936e30521df715, type: 3}
+  - {fileID: 8300000, guid: ae0e4a8050134e04986f61922f3ba869, type: 3}
+  - {fileID: 8300000, guid: afb73348f488d1341820828a3b2c6644, type: 3}
+  runFootsteps:
+  - {fileID: 8300000, guid: 0cc17c2ae37df9c42a49056d926fe22c, type: 3}
+  - {fileID: 8300000, guid: d6b8d2b37db166845a9abf9028545180, type: 3}
+  - {fileID: 8300000, guid: 7ae53d0bb561c1a47b936e30521df715, type: 3}
+  - {fileID: 8300000, guid: ae0e4a8050134e04986f61922f3ba869, type: 3}
+  - {fileID: 8300000, guid: afb73348f488d1341820828a3b2c6644, type: 3}
+  walkStepInterval: 0.55
+  runStepInterval: 0.1
+  footstepVolume: 0.8
+  idleSounds:
+  - {fileID: 8300000, guid: 0cc17c2ae37df9c42a49056d926fe22c, type: 3}
+  - {fileID: 8300000, guid: d6b8d2b37db166845a9abf9028545180, type: 3}
+  - {fileID: 8300000, guid: 7ae53d0bb561c1a47b936e30521df715, type: 3}
+  - {fileID: 8300000, guid: ae0e4a8050134e04986f61922f3ba869, type: 3}
+  - {fileID: 8300000, guid: afb73348f488d1341820828a3b2c6644, type: 3}
+  idleSoundIntervalMin: 4
+  idleSoundIntervalMax: 10
+  idleVolume: 0.9
+  hurtSounds:
+  - {fileID: 8300000, guid: b6c646a09cc10714b91b19956bd5032d, type: 3}
+  - {fileID: 8300000, guid: d8bc6688d9a3bf64aa525758b266cc64, type: 3}
+  - {fileID: 8300000, guid: f8c3a84d94ebb05468b45ee5f90bb079, type: 3}
+  - {fileID: 8300000, guid: 2af381a324f4f154b9a571cf3f35ea99, type: 3}
+  deathSound: {fileID: 8300000, guid: c7cb1979eafa95c419e8a70e18374096, type: 3}
+  landSound: {fileID: 8300000, guid: 4c46a154ca5399e4687dabf0316c2e4d, type: 3}
+  landDelay: 2
+  hurtVolume: 1
+  deathVolume: 1
+  audioMinDistance: 1
+  audioMaxDistance: 20

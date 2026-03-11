@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 
 public class StaminaUI : MonoBehaviour
@@ -16,11 +16,17 @@ public class StaminaUI : MonoBehaviour
     [SerializeField] private float shakeIntensity = 10f;
     [SerializeField] private float shakeDuration = 0.2f;
 
+    [Header("Son â€” Flash")]
+    [Tooltip("Son jouÃ© Ã  chaque pic rouge du flash")]
+    [SerializeField] private AudioClip flashSound;
+    [SerializeField][Range(0f, 1f)] private float flashSoundVolume = 0.7f;
+
+    private AudioSource audioSource;
+    private bool wasAtPeak = false;
+
     private bool isFlashing = false;
     private float flashTimer = 0f;
     private float previousStamina;
-
-    // Pour le tremblement
     private Vector3 originalPosition;
     private float shakeTimer = 0f;
     private bool isShaking = false;
@@ -28,15 +34,15 @@ public class StaminaUI : MonoBehaviour
     void Start()
     {
         if (staminaSystem != null)
-        {
             previousStamina = staminaSystem.GetCurrentStamina();
-        }
 
-        // Sauvegarde la position d'origine du texte
         if (staminaText != null)
-        {
             originalPosition = staminaText.transform.localPosition;
-        }
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
+        audioSource.loop = false;
     }
 
     void Update()
@@ -44,59 +50,54 @@ public class StaminaUI : MonoBehaviour
         if (staminaText == null || staminaSystem == null) return;
 
         float currentStamina = staminaSystem.GetCurrentStamina();
+        float maxStamina = staminaSystem.GetMaxStamina();
+        float staminaPct = (currentStamina / maxStamina) * 100f;
 
-        // Détecte la perte de stamina
-        if (currentStamina < previousStamina)
-        {
-            TriggerShake();
-        }
+        if (currentStamina < previousStamina) TriggerShake();
         previousStamina = currentStamina;
 
-        // Affiche la stamina avec formatage à 3 chiffres (max 100)
-        int staminaValue = Mathf.RoundToInt(currentStamina);
-        staminaValue = Mathf.Clamp(staminaValue, 0, 100); // Limite à 100 max
-        staminaText.text = staminaValue.ToString("D3"); // D3 = 3 chiffres avec zéros
+        staminaText.text = Mathf.Clamp(Mathf.RoundToInt(currentStamina), 0, 100).ToString("D3");
 
-        // Gestion du flash
-        if (currentStamina <= 20)
+        // Flash + son synchronisÃ©
+        if (staminaPct <= 20f && staminaPct > 0f)
         {
             isFlashing = true;
             flashTimer += Time.deltaTime * flashSpeed;
-            staminaText.color = Color.Lerp(normalColor, emptyColor, Mathf.PingPong(flashTimer, 1f));
+
+            float pingPong = Mathf.PingPong(flashTimer, 1f);
+            staminaText.color = Color.Lerp(normalColor, emptyColor, pingPong);
+
+            // DÃ©tecte le pic â€” joue le son une seule fois par cycle
+            bool atPeak = pingPong > 0.95f;
+            if (atPeak && !wasAtPeak && flashSound != null)
+                audioSource.PlayOneShot(flashSound, flashSoundVolume);
+            wasAtPeak = atPeak;
         }
         else
         {
             isFlashing = false;
+            wasAtPeak = false;
+            flashTimer = 0f;
             staminaText.color = normalColor;
         }
 
-        // Gestion du tremblement
+        // Tremblement
         if (isShaking)
         {
             shakeTimer += Time.deltaTime;
-
             if (shakeTimer < shakeDuration)
             {
-                // Applique un tremblement aléatoire
-                Vector3 shakeOffset = new Vector3(
+                staminaText.transform.localPosition = originalPosition + new Vector3(
                     Random.Range(-shakeIntensity, shakeIntensity),
-                    Random.Range(-shakeIntensity, shakeIntensity),
-                    0f
-                );
-                staminaText.transform.localPosition = originalPosition + shakeOffset;
+                    Random.Range(-shakeIntensity, shakeIntensity), 0f);
             }
             else
             {
-                // Fin du tremblement
                 isShaking = false;
                 staminaText.transform.localPosition = originalPosition;
             }
         }
     }
 
-    private void TriggerShake()
-    {
-        isShaking = true;
-        shakeTimer = 0f;
-    }
+    private void TriggerShake() { isShaking = true; shakeTimer = 0f; }
 }

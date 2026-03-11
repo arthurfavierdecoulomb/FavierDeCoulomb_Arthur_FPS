@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 
 public class AmmoUI : MonoBehaviour
@@ -16,60 +16,69 @@ public class AmmoUI : MonoBehaviour
     [SerializeField] private float shakeIntensity = 10f;
     [SerializeField] private float shakeDuration = 0.2f;
 
+    [Header("Son — Flash")]
+    [Tooltip("Son joué à chaque pic rouge du flash (munitions vides)")]
+    [SerializeField] private AudioClip flashSound;
+    [SerializeField][Range(0f, 1f)] private float flashSoundVolume = 0.7f;
+
+    private AudioSource audioSource;
+    private bool wasAtPeak = false;
+
     private int lastBulletCount = -1;
     private bool isFlashing = false;
     private float flashTimer = 0f;
-
-    // Pour le tremblement
     private Vector3 originalPosition;
     private float shakeTimer = 0f;
     private bool isShaking = false;
 
+    // ─────────────────────────────────────────────────────────────────────
     void Start()
     {
         if (weaponController != null)
-        {
             lastBulletCount = weaponController.GetCurrentBullets();
-        }
 
-        // Sauvegarde la position d'origine du texte
         if (ammoText != null)
-        {
             originalPosition = ammoText.transform.localPosition;
-        }
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
+        audioSource.loop = false;
     }
 
+    // ─────────────────────────────────────────────────────────────────────
     void Update()
     {
         if (ammoText == null || weaponController == null) return;
 
         int currentBullets = weaponController.GetCurrentBullets();
 
-        // D�tecte la perte de munitions (tir)
-        if (currentBullets < lastBulletCount)
-        {
-            TriggerShake();
-        }
+        if (currentBullets < lastBulletCount) TriggerShake();
 
-        // Format avec z�ro devant (00, 01, 02, etc.)
         ammoText.text = "0" + currentBullets.ToString();
 
-        // D�tecte quand on passe � z�ro
         if (currentBullets == 0 && lastBulletCount > 0)
         {
             isFlashing = true;
             flashTimer = 0f;
         }
+
         lastBulletCount = currentBullets;
 
-        // G�re le flash rouge
+        // Flash + son synchronisé au pic
         if (currentBullets == 0)
         {
             if (isFlashing)
             {
                 flashTimer += Time.deltaTime * flashSpeed;
-                // Ping-pong entre normalColor et emptyColor
-                ammoText.color = Color.Lerp(normalColor, emptyColor, Mathf.PingPong(flashTimer, 1f));
+                float pingPong = Mathf.PingPong(flashTimer, 1f);
+                ammoText.color = Color.Lerp(normalColor, emptyColor, pingPong);
+
+                // Son au pic rouge — une seule fois par cycle
+                bool atPeak = pingPong > 0.95f;
+                if (atPeak && !wasAtPeak && flashSound != null)
+                    audioSource.PlayOneShot(flashSound, flashSoundVolume);
+                wasAtPeak = atPeak;
             }
             else
             {
@@ -79,36 +88,27 @@ public class AmmoUI : MonoBehaviour
         else
         {
             isFlashing = false;
+            wasAtPeak = false;
             ammoText.color = normalColor;
         }
 
-        // Gestion du tremblement
+        // Tremblement
         if (isShaking)
         {
             shakeTimer += Time.deltaTime;
-
             if (shakeTimer < shakeDuration)
             {
-                // Applique un tremblement al�atoire
-                Vector3 shakeOffset = new Vector3(
+                ammoText.transform.localPosition = originalPosition + new Vector3(
                     Random.Range(-shakeIntensity, shakeIntensity),
-                    Random.Range(-shakeIntensity, shakeIntensity),
-                    0f
-                );
-                ammoText.transform.localPosition = originalPosition + shakeOffset;
+                    Random.Range(-shakeIntensity, shakeIntensity), 0f);
             }
             else
             {
-                // Fin du tremblement
                 isShaking = false;
                 ammoText.transform.localPosition = originalPosition;
             }
         }
     }
 
-    private void TriggerShake()
-    {
-        isShaking = true;
-        shakeTimer = 0f;
-    }
+    private void TriggerShake() { isShaking = true; shakeTimer = 0f; }
 }

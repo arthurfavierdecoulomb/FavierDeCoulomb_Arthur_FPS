@@ -2,14 +2,6 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-/// <summary>
-/// Zombie compatible avec le WaveManager.
-/// - Reçoit ses stats (vitesse, vague) via ZombieStats.Init()
-/// - Notifie sa mort via ZombieDeathNotifier (utilisé par le WaveManager)
-/// - Conserve toute la logique IA : patrouille, perception, poursuite, attaque, retour
-/// - Intègre un NavMeshGuard : replace automatiquement le zombie sur le NavMesh
-///   s'il en sort (ex: passage par une porte sans NavMesh en dessous)
-/// </summary>
 public class ZombieEnemy : MonoBehaviour
 {
     [Header("Références")]
@@ -46,14 +38,51 @@ public class ZombieEnemy : MonoBehaviour
     [SerializeField] private float timeBeforeDestroy = 5f;
 
     [Header("Sécurité NavMesh")]
-    [Tooltip("Rayon de recherche du point NavMesh le plus proche si hors NavMesh")]
     [SerializeField] private float snapRadius = 8f;
-    [Tooltip("Fréquence de vérification hors NavMesh (secondes)")]
     [SerializeField] private float navCheckInterval = 0.4f;
-    [Tooltip("Durée max sur un OffMeshLink avant force-complétion (secondes)")]
     [SerializeField] private float maxLinkTime = 2f;
-    [Tooltip("Délai de grâce après le spawn — le guard n'est pas actif pendant ce temps")]
     [SerializeField] private float snapGraceDelay = 2f;
+
+    [Header("Sons — Pas")]
+    [Tooltip("Pool de sons de marche (tirés aléatoirement)")]
+    [SerializeField] private AudioClip[] walkFootsteps;
+    [Tooltip("Pool de sons de course (tirés aléatoirement)")]
+    [SerializeField] private AudioClip[] runFootsteps;
+    [SerializeField] private float walkStepInterval = 0.55f;
+    [SerializeField] private float runStepInterval = 0.3f;
+    [SerializeField][Range(0f, 1f)] private float footstepVolume = 0.8f;
+
+    [Header("Sons — Zombie")]
+    [Tooltip("Grognements / bruits ambiants joués aléatoirement")]
+    [SerializeField] private AudioClip[] idleSounds;
+    [Tooltip("Intervalle min/max entre deux bruits ambiants (secondes)")]
+    [SerializeField] private float idleSoundIntervalMin = 4f;
+    [SerializeField] private float idleSoundIntervalMax = 10f;
+    [SerializeField][Range(0f, 1f)] private float idleVolume = 0.9f;
+
+    [Header("Sons — Dégâts & Mort")]
+    [SerializeField] private AudioClip[] hurtSounds;
+    [SerializeField] private AudioClip deathSound;
+    [SerializeField] private AudioClip landSound;
+    [Tooltip("Délai entre la mort et le bruit de chute au sol")]
+    [SerializeField] private float landDelay = 0.6f;
+    [SerializeField][Range(0f, 1f)] private float hurtVolume = 1f;
+    [SerializeField][Range(0f, 1f)] private float deathVolume = 1f;
+
+    [Header("Son 3D — Portée")]
+    [SerializeField] private float audioMinDistance = 1f;
+    [SerializeField] private float audioMaxDistance = 20f;
+
+    // AudioSources séparées : pas (loop) et FX ponctuels
+    private AudioSource stepsSource;
+    private AudioSource fxSource;
+
+    // Timers sons
+    private float _stepTimer = 0f;
+    private float _idleTimer = 0f;
+    private float _idleInterval = 0f;
+    private int _lastStepIdx = -1;
+    private int _lastIdleIdx = -1;
 
     // Paramètres Animator
     private const string PARAM_IS_RUNNING = "IsRunning";
@@ -84,10 +113,7 @@ public class ZombieEnemy : MonoBehaviour
     private ZombieState currentState = ZombieState.Idle;
 
     // =============================================
-    void Awake()
-    {
-        stats = GetComponent<ZombieStats>();
-    }
+    void Awake() { stats = GetComponent<ZombieStats>(); }
 
     void Start()
     {
@@ -97,7 +123,35 @@ public class ZombieEnemy : MonoBehaviour
 
         ApplyWaveStats();
         InitComponents();
+        InitAudio();
         SetState(ZombieState.Idle);
+
+        // Démarre le timer des bruits ambiants
+        _idleInterval = Random.Range(idleSoundIntervalMin, idleSoundIntervalMax);
+    }
+
+    // ─── Audio init ───────────────────────────────────────────────────────
+    void InitAudio()
+    {
+        // Source pour les pas — configurée en 3D
+        stepsSource = gameObject.AddComponent<AudioSource>();
+        ConfigureSource(stepsSource);
+        stepsSource.loop = false;
+
+        // Source pour les FX ponctuels (hurt, mort, idle)
+        fxSource = gameObject.AddComponent<AudioSource>();
+        ConfigureSource(fxSource);
+        fxSource.loop = false;
+    }
+
+    void ConfigureSource(AudioSource src)
+    {
+        src.playOnAwake = false;
+        src.spatialBlend = 1f;           // 100% 3D
+        src.rolloffMode = AudioRolloffMode.Linear;
+        src.minDistance = audioMinDistance;
+        src.maxDistance = audioMaxDistance;
+        src.dopplerLevel = 0f;
     }
 
     void ApplyWaveStats()
@@ -105,22 +159,18 @@ public class ZombieEnemy : MonoBehaviour
         if (stats == null) return;
         runSpeed = stats.moveSpeed;
         walkSpeed = stats.moveSpeed * 0.45f;
-        Debug.Log($"{name} — Vague {stats.wave} | run : {runSpeed:F1} | walk : {walkSpeed:F1}");
     }
 
     void InitComponents()
     {
         agent = GetComponent<NavMeshAgent>();
-        if (agent == null)
-        { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
-
+        if (agent == null) { Debug.LogError("NavMeshAgent manquant sur " + name); enabled = false; return; }
         agent.speed = walkSpeed;
         agent.stoppingDistance = attackRange * 0.8f;
         agent.angularSpeed = 0f;
 
         if (animator == null) animator = GetComponent<Animator>();
-        if (animator == null)
-        { Debug.LogError("Animator manquant sur " + name); enabled = false; return; }
+        if (animator == null) { Debug.LogError("Animator manquant sur " + name); enabled = false; return; }
 
         TryFindPlayer();
     }
@@ -141,13 +191,72 @@ public class ZombieEnemy : MonoBehaviour
     {
         if (isDead) return;
         if (player == null) { TryFindPlayer(); return; }
-
-        // Attend que le NavMesh soit baked et que l'agent soit placé dessus
         if (agent == null || !agent.isOnNavMesh) return;
 
         UpdateNavMeshGuard();
         UpdatePerception();
         UpdateStateMachine();
+        UpdateSounds();
+    }
+
+    // =============================================
+    // SONS
+    // =============================================
+    void UpdateSounds()
+    {
+        UpdateFootsteps();
+        UpdateIdleSounds();
+    }
+
+    void UpdateFootsteps()
+    {
+        bool moving = agent.velocity.magnitude > 0.3f;
+        if (!moving) { if (stepsSource.isPlaying) stepsSource.Stop(); _stepTimer = 0f; return; }
+
+        bool sprinting = currentState == ZombieState.Chasing || currentState == ZombieState.Attacking;
+        float interval = sprinting ? runStepInterval : walkStepInterval;
+        AudioClip[] pool = sprinting ? runFootsteps : walkFootsteps;
+
+        _stepTimer += Time.deltaTime;
+        if (_stepTimer >= interval && !stepsSource.isPlaying)
+        {
+            _stepTimer = 0f;
+            PlayRandomFromPool(pool, stepsSource, footstepVolume, ref _lastStepIdx);
+        }
+    }
+
+    void UpdateIdleSounds()
+    {
+        // Bruits ambiants joués périodiquement peu importe l'état
+        _idleTimer += Time.deltaTime;
+        if (_idleTimer >= _idleInterval)
+        {
+            _idleTimer = 0f;
+            _idleInterval = Random.Range(idleSoundIntervalMin, idleSoundIntervalMax);
+            PlayRandomFromPool(idleSounds, fxSource, idleVolume, ref _lastIdleIdx);
+        }
+    }
+
+    void PlayRandomFromPool(AudioClip[] pool, AudioSource src, float volume, ref int lastIdx)
+    {
+        if (pool == null || pool.Length == 0 || src == null) return;
+
+        int idx;
+        int attempts = 0;
+        do { idx = Random.Range(0, pool.Length); attempts++; }
+        while (idx == lastIdx && pool.Length > 1 && attempts < 10);
+
+        lastIdx = idx;
+        if (pool[idx] == null) return;
+        src.clip = pool[idx];
+        src.volume = volume;
+        src.Play();
+    }
+
+    void PlayFX(AudioClip clip, float volume)
+    {
+        if (fxSource == null || clip == null) return;
+        fxSource.PlayOneShot(clip, volume);
     }
 
     // =============================================
@@ -157,7 +266,6 @@ public class ZombieEnemy : MonoBehaviour
     {
         if (agent == null || !agent.enabled) return;
 
-        // Délai de grâce après le spawn — laisse le temps à l'agent de s'initialiser
         if (_graceTimer < snapGraceDelay)
         {
             _graceTimer += Time.deltaTime;
@@ -167,35 +275,20 @@ public class ZombieEnemy : MonoBehaviour
         if (agent.isOnOffMeshLink)
         {
             _onLinkTimer += Time.deltaTime;
-            if (_onLinkTimer >= maxLinkTime)
-            {
-                ForceCompleteOffMeshLink();
-                _onLinkTimer = 0f;
-            }
+            if (_onLinkTimer >= maxLinkTime) { ForceCompleteOffMeshLink(); _onLinkTimer = 0f; }
             return;
         }
         _onLinkTimer = 0f;
 
-        // Sur le NavMesh : mémorise la position valide
-        if (agent.isOnNavMesh)
-        {
-            _lastValidPos = transform.position;
-            return;
-        }
+        if (agent.isOnNavMesh) { _lastValidPos = transform.position; return; }
 
-        // Hors NavMesh : vérification périodique
         _navCheckTimer += Time.deltaTime;
-        if (_navCheckTimer >= navCheckInterval)
-        {
-            _navCheckTimer = 0f;
-            SnapToNavMesh();
-        }
+        if (_navCheckTimer >= navCheckInterval) { _navCheckTimer = 0f; SnapToNavMesh(); }
     }
 
     void ForceCompleteOffMeshLink()
     {
         if (!agent.isOnOffMeshLink) return;
-
         Vector3 endPos = agent.currentOffMeshLinkData.endPos;
         NavMeshHit hit;
         if (NavMesh.SamplePosition(endPos, out hit, snapRadius, NavMesh.AllAreas))
@@ -203,7 +296,6 @@ public class ZombieEnemy : MonoBehaviour
             agent.CompleteOffMeshLink();
             agent.Warp(hit.position);
             _lastValidPos = hit.position;
-            Debug.Log($"[NavMeshGuard] {name} — OffMeshLink forcé vers {hit.position}");
         }
     }
 
@@ -211,8 +303,7 @@ public class ZombieEnemy : MonoBehaviour
     {
         NavMeshHit hit;
         bool found = NavMesh.SamplePosition(transform.position, out hit, snapRadius, NavMesh.AllAreas);
-        if (!found)
-            found = NavMesh.SamplePosition(_lastValidPos, out hit, snapRadius, NavMesh.AllAreas);
+        if (!found) found = NavMesh.SamplePosition(_lastValidPos, out hit, snapRadius, NavMesh.AllAreas);
 
         if (found)
         {
@@ -220,20 +311,9 @@ public class ZombieEnemy : MonoBehaviour
             transform.position = hit.position;
             agent.enabled = true;
             _lastValidPos = hit.position;
-
-            if (agent.hasPath)
-            {
-                Vector3 dest = agent.destination;
-                agent.ResetPath();
-                agent.SetDestination(dest);
-            }
-            Debug.Log($"[NavMeshGuard] {name} replacé sur le NavMesh à {hit.position}");
+            if (agent.hasPath) { Vector3 dest = agent.destination; agent.ResetPath(); agent.SetDestination(dest); }
         }
-        else
-        {
-            // Pas de NavMesh trouvé — on log mais on ne tue pas
-            Debug.LogWarning($"[NavMeshGuard] {name} introuvable sur NavMesh dans {snapRadius}m — augmente snapRadius.");
-        }
+        else Debug.LogWarning($"[NavMeshGuard] {name} introuvable sur NavMesh dans {snapRadius}m.");
     }
 
     // =============================================
@@ -242,7 +322,6 @@ public class ZombieEnemy : MonoBehaviour
     void UpdatePerception()
     {
         if (player == null) return;
-
         float dist = Vector3.Distance(transform.position, player.position);
 
         bool lineOfSight = false;
@@ -250,22 +329,15 @@ public class ZombieEnemy : MonoBehaviour
         {
             Vector3 origin = transform.position + Vector3.up * 1.5f;
             Vector3 target = player.position + Vector3.up * 1.0f;
-            if (!Physics.Linecast(origin, target, obstacleMask))
-                lineOfSight = true;
+            if (!Physics.Linecast(origin, target, obstacleMask)) lineOfSight = true;
         }
 
         bool hearsPlayer = dist <= hearingRange;
         canSeePlayer = lineOfSight || hearsPlayer;
 
-        if (canSeePlayer)
-        {
-            lastKnownPlayerPos = player.position;
-            losePlayerTimer = 0f;
-        }
+        if (canSeePlayer) { lastKnownPlayerPos = player.position; losePlayerTimer = 0f; }
         else if (currentState == ZombieState.Chasing || currentState == ZombieState.Attacking)
-        {
             losePlayerTimer += Time.deltaTime;
-        }
     }
 
     // =============================================
@@ -277,8 +349,7 @@ public class ZombieEnemy : MonoBehaviour
         {
             if (currentState != ZombieState.Patrolling && currentState != ZombieState.Idle)
                 SetState(ZombieState.Patrolling);
-            ExecuteState();
-            return;
+            ExecuteState(); return;
         }
 
         float dist = Vector3.Distance(transform.position, player.position);
@@ -289,29 +360,20 @@ public class ZombieEnemy : MonoBehaviour
             case ZombieState.Patrolling:
                 if (canSeePlayer) SetState(ZombieState.Chasing);
                 break;
-
             case ZombieState.Chasing:
-                if (dist <= attackRange)
-                    SetState(ZombieState.Attacking);
-                else if (!canSeePlayer && losePlayerTimer >= losePlayerTime)
-                    SetState(ZombieState.Returning);
+                if (dist <= attackRange) SetState(ZombieState.Attacking);
+                else if (!canSeePlayer && losePlayerTimer >= losePlayerTime) SetState(ZombieState.Returning);
                 break;
-
             case ZombieState.Attacking:
-                if (dist > attackRange * 1.3f)
-                    SetState(ZombieState.Chasing);
-                else if (!canSeePlayer && losePlayerTimer >= losePlayerTime)
-                    SetState(ZombieState.Returning);
+                if (dist > attackRange * 1.3f) SetState(ZombieState.Chasing);
+                else if (!canSeePlayer && losePlayerTimer >= losePlayerTime) SetState(ZombieState.Returning);
                 break;
-
             case ZombieState.Returning:
-                if (canSeePlayer)
-                    SetState(ZombieState.Chasing);
+                if (canSeePlayer) SetState(ZombieState.Chasing);
                 else if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
                     SetState(ZombieState.Patrolling);
                 break;
         }
-
         ExecuteState();
     }
 
@@ -319,43 +381,31 @@ public class ZombieEnemy : MonoBehaviour
     {
         if (newState == currentState) return;
         currentState = newState;
-
-        // Ne touche pas à l'agent si pas encore sur le NavMesh
         if (agent == null || !agent.isOnNavMesh) return;
 
         switch (newState)
         {
             case ZombieState.Idle:
-                agent.isStopped = true;
-                agent.ResetPath();
+                agent.isStopped = true; agent.ResetPath();
                 animator.SetBool(PARAM_IS_RUNNING, false);
-                patrolWaitTimer = 0f;
-                patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
+                patrolWaitTimer = 0f; patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
                 isWaitingAtPoint = true;
                 break;
-
             case ZombieState.Patrolling:
-                agent.speed = walkSpeed;
-                agent.isStopped = false;
+                agent.speed = walkSpeed; agent.isStopped = false;
                 TrySetPatrolDestination();
                 break;
-
             case ZombieState.Chasing:
-                agent.speed = runSpeed;
-                agent.isStopped = false;
+                agent.speed = runSpeed; agent.isStopped = false;
                 animator.SetBool(PARAM_IS_RUNNING, true);
                 break;
-
             case ZombieState.Attacking:
-                agent.isStopped = true;
-                agent.ResetPath();
+                agent.isStopped = true; agent.ResetPath();
                 animator.SetBool(PARAM_IS_RUNNING, false);
                 animator.ResetTrigger(PARAM_ATTACK);
                 break;
-
             case ZombieState.Returning:
-                agent.speed = walkSpeed;
-                agent.isStopped = false;
+                agent.speed = walkSpeed; agent.isStopped = false;
                 animator.SetBool(PARAM_IS_RUNNING, false);
                 agent.SetDestination(lastKnownPlayerPos);
                 StartCoroutine(ReturnToSpawnAfterDelay(1.5f));
@@ -366,8 +416,7 @@ public class ZombieEnemy : MonoBehaviour
     IEnumerator ReturnToSpawnAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        if (currentState == ZombieState.Returning)
-            agent.SetDestination(spawnPosition);
+        if (currentState == ZombieState.Returning) agent.SetDestination(spawnPosition);
     }
 
     void ExecuteState()
@@ -379,19 +428,14 @@ public class ZombieEnemy : MonoBehaviour
             case ZombieState.Chasing: ExecuteChase(); break;
             case ZombieState.Attacking: ExecuteAttack(); break;
             case ZombieState.Returning:
-                if (agent.hasPath) SmoothRotateTowards(agent.steeringTarget);
-                break;
+                if (agent.hasPath) SmoothRotateTowards(agent.steeringTarget); break;
         }
     }
 
-    // =============================================
-    // ÉTATS
-    // =============================================
     void ExecuteIdle()
     {
         patrolWaitTimer += Time.deltaTime;
-        if (patrolWaitTimer >= patrolWaitDuration)
-            SetState(ZombieState.Patrolling);
+        if (patrolWaitTimer >= patrolWaitDuration) SetState(ZombieState.Patrolling);
     }
 
     void ExecutePatrol()
@@ -399,22 +443,16 @@ public class ZombieEnemy : MonoBehaviour
         if (isWaitingAtPoint)
         {
             patrolWaitTimer += Time.deltaTime;
-            if (patrolWaitTimer >= patrolWaitDuration)
-            {
-                isWaitingAtPoint = false;
-                TrySetPatrolDestination();
-            }
+            if (patrolWaitTimer >= patrolWaitDuration) { isWaitingAtPoint = false; TrySetPatrolDestination(); }
         }
         else
         {
             if (agent.hasPath) SmoothRotateTowards(agent.steeringTarget);
-
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.2f)
             {
                 agent.isStopped = true;
                 animator.SetBool(PARAM_IS_RUNNING, false);
-                isWaitingAtPoint = true;
-                patrolWaitTimer = 0f;
+                isWaitingAtPoint = true; patrolWaitTimer = 0f;
                 patrolWaitDuration = Random.Range(patrolWaitMin, patrolWaitMax);
             }
         }
@@ -439,7 +477,7 @@ public class ZombieEnemy : MonoBehaviour
     }
 
     // =============================================
-    // PATROUILLE NAVMESH
+    // PATROUILLE
     // =============================================
     void TrySetPatrolDestination()
     {
@@ -447,15 +485,13 @@ public class ZombieEnemy : MonoBehaviour
         {
             Vector3 randomDir = Random.insideUnitSphere * patrolRadius + transform.position;
             randomDir.y = transform.position.y;
-
             NavMeshHit hit;
             if (NavMesh.SamplePosition(randomDir, out hit, patrolRadius, NavMesh.AllAreas))
             {
                 NavMeshPath path = new NavMeshPath();
                 if (agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete)
                 {
-                    agent.SetDestination(hit.position);
-                    agent.isStopped = false;
+                    agent.SetDestination(hit.position); agent.isStopped = false;
                     agent.speed = walkSpeed;
                     animator.SetBool(PARAM_IS_RUNNING, true);
                     return;
@@ -465,19 +501,11 @@ public class ZombieEnemy : MonoBehaviour
         SetState(ZombieState.Idle);
     }
 
-    // =============================================
-    // ROTATION FLUIDE
-    // =============================================
     void SmoothRotateTowards(Vector3 targetPos)
     {
-        Vector3 dir = targetPos - transform.position;
-        dir.y = 0f;
+        Vector3 dir = targetPos - transform.position; dir.y = 0f;
         if (dir.sqrMagnitude < 0.001f) return;
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            Quaternion.LookRotation(dir),
-            rotateSpeed * Time.deltaTime
-        );
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
     }
 
     // =============================================
@@ -499,28 +527,33 @@ public class ZombieEnemy : MonoBehaviour
         if (isDead) return;
         currentHealth = Mathf.Clamp(currentHealth - damage, 0, maxHealth);
 
-        if (!canSeePlayer && player != null)
-        {
-            lastKnownPlayerPos = player.position;
-            SetState(ZombieState.Chasing);
-        }
+        // Son de dégâts
+        if (hurtSounds != null && hurtSounds.Length > 0)
+            PlayFX(hurtSounds[Random.Range(0, hurtSounds.Length)], hurtVolume);
 
+        if (!canSeePlayer && player != null) { lastKnownPlayerPos = player.position; SetState(ZombieState.Chasing); }
         if (currentHealth <= 0) Die();
     }
 
     void Die()
     {
         if (isDead) return;
-        isDead = true;
-        currentState = ZombieState.Dead;
+        isDead = true; currentState = ZombieState.Dead;
 
         StopAllCoroutines();
 
+        // Arrête les pas
+        if (stepsSource != null) stepsSource.Stop();
+
+        // Son de mort
+        PlayFX(deathSound, deathVolume);
+
+        // Son de chute au sol après délai
+        StartCoroutine(PlayLandSoundDelayed());
+
         animator.SetTrigger(PARAM_DEATH);
         animator.SetBool(PARAM_IS_RUNNING, false);
-
-        agent.isStopped = true;
-        agent.enabled = false;
+        agent.isStopped = true; agent.enabled = false;
 
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
@@ -532,7 +565,12 @@ public class ZombieEnemy : MonoBehaviour
         if (notifier != null) notifier.NotifyDeath();
 
         Destroy(gameObject, timeBeforeDestroy);
-        Debug.Log($"{name} est mort.");
+    }
+
+    IEnumerator PlayLandSoundDelayed()
+    {
+        yield return new WaitForSeconds(landDelay);
+        PlayFX(landSound, deathVolume);
     }
 
     // =============================================
@@ -548,17 +586,10 @@ public class ZombieEnemy : MonoBehaviour
     // =============================================
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, hearingRange);
-
-        Gizmos.color = new Color(0f, 1f, 0f, 0.2f);
-        Gizmos.DrawWireSphere(transform.position, patrolRadius);
+        Gizmos.color = Color.red; Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.color = Color.yellow; Gizmos.DrawWireSphere(transform.position, detectionRange);
+        Gizmos.color = Color.cyan; Gizmos.DrawWireSphere(transform.position, hearingRange);
+        Gizmos.color = new Color(0f, 1f, 0f, 0.2f); Gizmos.DrawWireSphere(transform.position, patrolRadius);
 
         if (player != null && !isDead)
         {
@@ -569,18 +600,9 @@ public class ZombieEnemy : MonoBehaviour
                 Gizmos.DrawLine(transform.position + Vector3.up * 1.5f, player.position + Vector3.up);
             }
         }
-
         if (Application.isPlaying && currentState == ZombieState.Returning)
-        {
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawSphere(lastKnownPlayerPos, 0.3f);
-        }
-
-        // Dernière position valide NavMesh (debug)
+        { Gizmos.color = Color.magenta; Gizmos.DrawSphere(lastKnownPlayerPos, 0.3f); }
         if (Application.isPlaying)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawSphere(_lastValidPos, 0.15f);
-        }
+        { Gizmos.color = Color.green; Gizmos.DrawSphere(_lastValidPos, 0.15f); }
     }
 }

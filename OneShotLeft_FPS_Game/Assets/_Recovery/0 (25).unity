@@ -312,8 +312,11 @@ MonoBehaviour:
   lowHealthThreshold: 20
   shakeIntensity: 10
   shakeDuration: 0.2
-  flashSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
-  flashSoundVolume: 0.205
+  healthLoopSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
+  soundStartThreshold: 50
+  pitchHigh: 1.2
+  pitchLow: 0.5
+  healthSoundVolume: 0.5
 --- !u!1 &76407317
 GameObject:
   m_ObjectHideFlags: 0
@@ -2544,8 +2547,6 @@ MonoBehaviour:
   flashSpeed: 5
   shakeIntensity: 10
   shakeDuration: 0.2
-  flashSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
-  flashSoundVolume: 0.218
 --- !u!1 &491745294
 GameObject:
   m_ObjectHideFlags: 0
@@ -5296,8 +5297,11 @@ MonoBehaviour:
   flashSpeed: 5
   shakeIntensity: 5
   shakeDuration: 0.1
-  flashSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
-  flashSoundVolume: 0.256
+  staminaLoopSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
+  soundStartThreshold: 60
+  pitchHigh: 1.2
+  pitchLow: 0.5
+  staminaSoundVolume: 0.5
 --- !u!1 &1387186510
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,4 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using TMPro;
 
 public class HealthUI : MonoBehaviour
@@ -17,11 +17,17 @@ public class HealthUI : MonoBehaviour
     [SerializeField] private float shakeIntensity = 10f;
     [SerializeField] private float shakeDuration = 0.2f;
 
+    [Header("Son ‚Äî Flash")]
+    [Tooltip("Son jou√© √† chaque pic rouge du flash")]
+    [SerializeField] private AudioClip flashSound;
+    [SerializeField][Range(0f, 1f)] private float flashSoundVolume = 0.7f;
+
+    private AudioSource audioSource;
+    private bool wasAtPeak = false; // d√©tecte le pic du PingPong
+
     private bool isFlashing = false;
     private float flashTimer = 0f;
     private int previousHealth;
-
-    // Pour le tremblement
     private Vector3 originalPosition;
     private float shakeTimer = 0f;
     private bool isShaking = false;
@@ -29,15 +35,15 @@ public class HealthUI : MonoBehaviour
     void Start()
     {
         if (playerHealth != null)
-        {
             previousHealth = playerHealth.GetHealth();
-        }
 
-        // Sauvegarde la position d'origine du texte
         if (healthText != null)
-        {
             originalPosition = healthText.transform.localPosition;
-        }
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
+        audioSource.loop = false;
     }
 
     void Update()
@@ -46,57 +52,51 @@ public class HealthUI : MonoBehaviour
 
         int currentHealth = playerHealth.GetHealth();
 
-        // DÈtecte la perte de vie
-        if (currentHealth < previousHealth)
-        {
-            TriggerShake();
-        }
+        if (currentHealth < previousHealth) TriggerShake();
         previousHealth = currentHealth;
 
-        // Affiche la vie avec formatage ‡ 3 chiffres (000 ‡ 100)
-        int healthValue = Mathf.Clamp(currentHealth, 0, 100);
-        healthText.text = healthValue.ToString("D3"); // D3 = 3 chiffres avec zÈros
+        healthText.text = Mathf.Clamp(currentHealth, 0, 100).ToString("D3");
 
-        // Gestion du flash quand la vie est basse
-        if (currentHealth <= lowHealthThreshold)
+        // Flash + son synchronis√©
+        if (currentHealth <= lowHealthThreshold && currentHealth > 0)
         {
             isFlashing = true;
             flashTimer += Time.deltaTime * flashSpeed;
-            healthText.color = Color.Lerp(normalColor, lowHealthColor, Mathf.PingPong(flashTimer, 1f));
+
+            float pingPong = Mathf.PingPong(flashTimer, 1f);
+            healthText.color = Color.Lerp(normalColor, lowHealthColor, pingPong);
+
+            // D√©tecte le pic (proche de 1) ‚Äî joue le son une seule fois par cycle
+            bool atPeak = pingPong > 0.95f;
+            if (atPeak && !wasAtPeak && flashSound != null)
+                audioSource.PlayOneShot(flashSound, flashSoundVolume);
+            wasAtPeak = atPeak;
         }
         else
         {
             isFlashing = false;
+            wasAtPeak = false;
+            flashTimer = 0f;
             healthText.color = normalColor;
         }
 
-        // Gestion du tremblement
+        // Tremblement
         if (isShaking)
         {
             shakeTimer += Time.deltaTime;
-
             if (shakeTimer < shakeDuration)
             {
-                // Applique un tremblement alÈatoire
-                Vector3 shakeOffset = new Vector3(
+                healthText.transform.localPosition = originalPosition + new Vector3(
                     Random.Range(-shakeIntensity, shakeIntensity),
-                    Random.Range(-shakeIntensity, shakeIntensity),
-                    0f
-                );
-                healthText.transform.localPosition = originalPosition + shakeOffset;
+                    Random.Range(-shakeIntensity, shakeIntensity), 0f);
             }
             else
             {
-                // Fin du tremblement
                 isShaking = false;
                 healthText.transform.localPosition = originalPosition;
             }
         }
     }
 
-    private void TriggerShake()
-    {
-        isShaking = true;
-        shakeTimer = 0f;
-    }
+    private void TriggerShake() { isShaking = true; shakeTimer = 0f; }
 }
