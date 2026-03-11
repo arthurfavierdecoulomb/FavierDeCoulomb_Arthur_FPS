@@ -1,5 +1,7 @@
 using UnityEngine;
 
+
+
 public class ArmFollowCamera : MonoBehaviour
 {
     [Header("Références")]
@@ -23,15 +25,17 @@ public class ArmFollowCamera : MonoBehaviour
 
     private float bobTimer;
 
+    
     void Start()
     {
+        // Si les références ne sont pas assignées dans l'inspecteur, tente de les trouver automatiquement
         if (cameraTransform == null)
             cameraTransform = Camera.main.transform;
     }
 
     void Update()
     {
-        // Bloque le tir si le curseur est visible (écran de mort, menu, etc.)
+        // Ne pas bouger les bras si la souris n'est pas verrouillée
         if (Cursor.lockState != CursorLockMode.Locked) return;
 
     }
@@ -39,22 +43,26 @@ public class ArmFollowCamera : MonoBehaviour
     
     void LateUpdate()
     {
+        // Vérification des références
         if (cameraTransform == null || playerMovement == null) return;
 
-        // Rotation = caméra
+        // Rotation du bras pour suivre la caméra + correction
         transform.rotation = cameraTransform.rotation * Quaternion.Euler(rotationCorrection);
 
+        // Position de base du bras
         Vector3 finalOffset = localOffset;
 
-        // Conditions de mouvement
+        // Bobbing du bras
         bool isMoving = playerMovement.GetCurrentSpeed() > 0.1f &&
                         playerMovement.IsGrounded();
 
+        // Choix du bob selon l'état du joueur
         if (isMoving)
         {
             float bobSpeed;
             float bobAmount;
 
+            // Priorité : accroupi > sprint > marche
             if (playerMovement.IsCrouching())
             {
                 bobSpeed = walkBobSpeed;
@@ -71,9 +79,10 @@ public class ArmFollowCamera : MonoBehaviour
                 bobAmount = walkBobAmount;
             }
 
+            // Avance du timer de bob
             bobTimer += Time.deltaTime * bobSpeed;
 
-            // Bob FPS classique
+            // Calcul du bob en X et Y
             float bobY = Mathf.Sin(bobTimer) * bobAmount;
             float bobX = Mathf.Cos(bobTimer * 0.5f) * bobAmount * 0.5f;
 
@@ -81,10 +90,11 @@ public class ArmFollowCamera : MonoBehaviour
         }
         else
         {
+            // Reset du timer de bob pour éviter les sauts lors de la reprise du mouvement
             bobTimer = 0f;
         }
 
-        // Position finale
+        // Position finale du bras : position de la caméra + offset transformé
         transform.position =
             cameraTransform.position +
             cameraTransform.TransformDirection(finalOffset);

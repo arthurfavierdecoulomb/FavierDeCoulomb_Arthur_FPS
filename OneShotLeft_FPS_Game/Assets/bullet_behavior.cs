@@ -4,14 +4,14 @@ public class Bullet : MonoBehaviour
 {
     [Header("Physics")]
     [SerializeField] private float launchForce = 20f;
-    [SerializeField] private float damage = 9999f;  // one shot
+    [SerializeField] private float damage = 50f;  // Dégâts de la balle, ajustable dans l'inspecteur, deux tires suffisent pour tuer un zombie de base
 
     [Header("Pickup")]
-    [SerializeField] private float pickupRadius = 1.5f;
+    [SerializeField] private float pickupRadius = 1.5f; // Rayon de détection pour le pickup de la balle
     [SerializeField] private LayerMask playerLayer;
 
     [Header("Visuals")]
-    [SerializeField] private float bulletScale = 1f;
+    [SerializeField] private float bulletScale = 1f; // Permet d'ajuster la taille de la balle dans l'inspecteur pour une meilleure visibilité
 
     private Rigidbody rb;
     private bool hasHit = false;
@@ -19,6 +19,7 @@ public class Bullet : MonoBehaviour
 
     void Start()
     {
+        // Ajuste la taille de la balle pour la rendre plus visible
         rb = GetComponent<Rigidbody>();
         if (rb != null)
             rb.linearVelocity = transform.forward * launchForce;
@@ -43,15 +44,15 @@ public class Bullet : MonoBehaviour
 
         Debug.Log("Balle a touche : " + collision.gameObject.name);
 
-        // Cherche le ZombieEnemy sur le GO touché ou ses parents
+        // Vérifie si l'objet touché est un zombie
         ZombieEnemy zombie = collision.gameObject.GetComponentInParent<ZombieEnemy>();
         if (zombie != null)
         {
-            zombie.TakeDamage((int)damage);    // one shot
-            // La balle continue de tomber pour être récupérée
+            zombie.TakeDamage((int)damage);
+            // La balle est détruite immédiatement après avoir touché un zombie
         }
 
-        // Pas un zombie : la balle reste au sol pour être récupérée
+        // Arrête la balle pour éviter qu'elle ne continue à se déplacer après l'impact
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
@@ -61,11 +62,13 @@ public class Bullet : MonoBehaviour
 
     public void SetWeaponController(WeaponController controller)
     {
+        // Permet au WeaponController de s'assigner lui-même à la balle lors de son instantiation
         weaponController = controller;
     }
 
     void OnDrawGizmosSelected()
     {
+        // Affiche une sphère verte dans l'éditeur pour visualiser le rayon de pickup de la balle
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, pickupRadius);
     }
