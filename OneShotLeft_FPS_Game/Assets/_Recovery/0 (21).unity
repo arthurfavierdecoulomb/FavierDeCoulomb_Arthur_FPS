@@ -4089,7 +4089,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 907713530}
-  - component: {fileID: 907713529}
   - component: {fileID: 907713531}
   m_Layer: 0
   m_Name: UIVictoireManager
@@ -4098,38 +4097,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &907713529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 907713528}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2f20b1fb1c09404ea129ea94b41a0a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VictoryScreen
-  victoryScreenPanel: {fileID: 0}
-  darkOverlay: {fileID: 0}
-  mainTitleText: {fileID: 0}
-  motivationalText: {fileID: 0}
-  replayButton: {fileID: 0}
-  quitButton: {fileID: 0}
-  gameUIPanel: {fileID: 0}
-  titleShakeDuration: 0.4
-  titleShakeIntensity: 10
-  slideDuration: 0.7
-  slideDistance: 200
-  typewriterSpeed: 0.03
-  titleFinalYPosition: 150
-  motivationalFinalYPosition: 0
-  buttonFinalYPosition: -130
-  buttonSpacing: 120
-  titleImpactSound: {fileID: 0}
-  typewriterTickSound: {fileID: 0}
-  titleSoundVolume: 1
-  typewriterVolume: 0.4
 --- !u!4 &907713530
 Transform:
   m_ObjectHideFlags: 0

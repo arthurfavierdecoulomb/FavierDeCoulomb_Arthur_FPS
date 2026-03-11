@@ -1,134 +1,109 @@
 ﻿using UnityEngine;
 using TMPro;
 
-// conrtrairement au script bullet_behavior, ce script est attaché à un UI TextMeshPro qui affiche le nombre de munitions restantes. Il écoute les
-// changements de munitions dans le WeaponController pour déclencher
-// des effets visuels et sonores lorsque les munitions sont vides ou lorsqu'on tire.
-public class AmmoUI : MonoBehaviour
+public class AmmoUI : MonoBehaviour                                                 // Affiche les munitions en UI et déclenche effets visuels/sonores
 {
     [Header("References")]
-    [SerializeField] private TextMeshProUGUI ammoText;
-    [SerializeField] private WeaponController weaponController;
+    [SerializeField] private TextMeshProUGUI ammoText;                              // Texte TMP qui affiche le compteur de munitions
+    [SerializeField] private WeaponController weaponController;                     // Référence au WeaponController pour lire les munitions
 
     [Header("Flash Settings")]
-    [SerializeField] private Color normalColor = Color.white;
-    [SerializeField] private Color emptyColor = Color.red;
-    [SerializeField] private float flashSpeed = 5f;
+    [SerializeField] private Color normalColor = Color.white;                       // Couleur du texte quand les munitions sont disponibles
+    [SerializeField] private Color emptyColor = Color.red;                         // Couleur du flash quand les munitions sont à zéro
+    [SerializeField] private float flashSpeed = 5f;                                // Vitesse du flash (plus élevé = plus rapide)
 
     [Header("Shake Settings")]
-    [SerializeField] private float shakeIntensity = 10f;
-    [SerializeField] private float shakeDuration = 0.2f;
+    [SerializeField] private float shakeIntensity = 10f;                            // Amplitude du tremblement en pixels
+    [SerializeField] private float shakeDuration = 0.2f;                          // Durée du tremblement en secondes
 
     [Header("Son — Flash")]
-    [Tooltip("Son joué à chaque pic rouge du flash (munitions vides)")] // c'est pratique pour rappeler à l'équipe de designer que ce son doit être court et percutant,
-                                                                        // idéalement un "clic sec" ou un "bip d'erreur", pas une longue alerte qui pourrait devenir agaçante
-    [SerializeField] private AudioClip flashSound;
-    [SerializeField][Range(0f, 1f)] private float flashSoundVolume = 0.7f; // volume du son de flash, ajustable dans l'inspecteur pour
-                                                                           // trouver le bon équilibre avec les autres sons du jeu
+    [Tooltip("Son court joué à chaque pic rouge — idéalement un clic sec ou bip d'erreur")]
+    [SerializeField] private AudioClip flashSound;                                  // Son joué en sync avec chaque pic rouge du flash
+    [SerializeField][Range(0f, 1f)] private float flashSoundVolume = 0.7f;         // Volume du son de flash, à équilibrer avec les autres sons
 
-    private AudioSource audioSource;
-    private bool wasAtPeak = false;
+    private AudioSource audioSource;                                                // AudioSource pour jouer le son de flash
+    private bool wasAtPeak = false;                                                 // Détecte le pic du PingPong pour jouer le son une seule fois par cycle
 
-    // Suivi du nombre de munitions pour détecter les changements
-    private int lastBulletCount = -1;
-    private bool isFlashing = false;
-    private float flashTimer = 0f;
-    private Vector3 originalPosition;
-    private float shakeTimer = 0f;
-    private bool isShaking = false;
+    private int lastBulletCount = -1;                                             // Dernier nombre de munitions connu — détecte les changements
+    private bool isFlashing = false;                                          // Indique si le flash est actif
+    private float flashTimer = 0f;                                             // Timer qui fait avancer l'animation de flash
+    private Vector3 originalPosition;                                               // Position d'origine du texte avant tremblement
+    private float shakeTimer = 0f;                                             // Timer du tremblement
+    private bool isShaking = false;                                          // Indique si le tremblement est actif
 
-    
     void Start()
     {
-        // Initialisation du texte et du compteur de munitions
         if (weaponController != null)
-            lastBulletCount = weaponController.GetCurrentBullets();
+            lastBulletCount = weaponController.GetCurrentBullets();                 // Initialise le compteur pour éviter un faux déclenchement au démarrage
 
-        // Stocke la position originale du texte pour le tremblement
         if (ammoText != null)
-            originalPosition = ammoText.transform.localPosition;
+            originalPosition = ammoText.transform.localPosition;                   // Stocke la position de repos du texte pour le tremblement
 
-        // Assure qu'il y a un AudioSource sur ce GameObject, sinon en ajoute un
-        audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0f;
-        audioSource.loop = false;
+        audioSource = gameObject.AddComponent<AudioSource>();          // Crée l'AudioSource dynamiquement
+        audioSource.playOnAwake = false;                                           // Ne joue pas automatiquement
+        audioSource.spatialBlend = 0f;                                              // Son 2D — entendu partout, pas d'atténuation spatiale
+        audioSource.loop = false;                                           // Son ponctuel, pas en boucle
     }
 
-    
     void Update()
     {
-        // Vérifie les références avant de continuer
-        if (ammoText == null || weaponController == null) return;
+        if (ammoText == null || weaponController == null) return;                   // Sécurité : évite les erreurs si les références manquent
 
-        int currentBullets = weaponController.GetCurrentBullets();
+        int currentBullets = weaponController.GetCurrentBullets();                 // Lit le nombre de munitions actuel
 
-        if (currentBullets < lastBulletCount) TriggerShake();
+        if (currentBullets < lastBulletCount) TriggerShake();                      // Déclenche le tremblement à chaque tir
 
-        ammoText.text = "0" + currentBullets.ToString();
+        ammoText.text = "0" + currentBullets.ToString();                           // Affiche avec un zéro devant (ex: 01, 00)
 
-        // Détecte le passage à 0 munitions pour déclencher le flash
         if (currentBullets == 0 && lastBulletCount > 0)
         {
-            isFlashing = true;
-            flashTimer = 0f;
+            isFlashing = true;                                                      // Active le flash au moment exact où les munitions passent à 0
+            flashTimer = 0f;                                                        // Repart du début pour un cycle propre
         }
 
-        lastBulletCount = currentBullets;
+        lastBulletCount = currentBullets;                                           // Met à jour pour la prochaine frame
 
-        // Flash + son synchronisé au pic
         if (currentBullets == 0)
         {
             if (isFlashing)
             {
-                // Avance le timer de flash
-                flashTimer += Time.deltaTime * flashSpeed;
-                float pingPong = Mathf.PingPong(flashTimer, 1f);
-                ammoText.color = Color.Lerp(normalColor, emptyColor, pingPong);
+                flashTimer += Time.deltaTime * flashSpeed;                          // Avance le timer du flash
+                float pingPong = Mathf.PingPong(flashTimer, 1f);                   // Valeur oscillante entre 0 et 1
+                ammoText.color = Color.Lerp(normalColor, emptyColor, pingPong);    // Interpolation de couleur blanc → rouge → blanc
 
-                // Son au pic rouge — une seule fois par cycle
-                bool atPeak = pingPong > 0.95f;
+                bool atPeak = pingPong > 0.95f;                                    // Détecte le pic rouge (proche de 1)
                 if (atPeak && !wasAtPeak && flashSound != null)
-                    audioSource.PlayOneShot(flashSound, flashSoundVolume);
-                wasAtPeak = atPeak;
+                    audioSource.PlayOneShot(flashSound, flashSoundVolume);          // Joue le son une seule fois par pic
+                wasAtPeak = atPeak;                                                 // Mémorise l'état du pic pour éviter les répétitions
             }
             else
             {
-                // Si pour une raison quelconque le flash n'est pas actif alors que les munitions sont à 0, s'assure que le texte est rouge
-                ammoText.color = emptyColor;
+                ammoText.color = emptyColor;                                        // Reste rouge fixe si le flash n'est pas actif
             }
         }
         else
         {
-
-            // Réinitialise le flash si les munitions sont rechargées ou si on tire
-            isFlashing = false;
-            wasAtPeak = false;
-            ammoText.color = normalColor;
+            isFlashing = false;                                                 // Désactive le flash dès que les munitions reviennent
+            wasAtPeak = false;                                                 // Réinitialise le détecteur de pic
+            ammoText.color = normalColor;                                           // Remet la couleur normale
         }
 
-        // Tremblement lorsqu'on tire, avec une durée limitée
         if (isShaking)
         {
-            // Avance le timer de tremblement
-            shakeTimer += Time.deltaTime;
+            shakeTimer += Time.deltaTime;                                           // Avance le timer du tremblement
             if (shakeTimer < shakeDuration)
             {
-                // Applique un déplacement aléatoire au texte pour créer l'effet de tremblement
                 ammoText.transform.localPosition = originalPosition + new Vector3(
                     Random.Range(-shakeIntensity, shakeIntensity),
-                    Random.Range(-shakeIntensity, shakeIntensity), 0f);
+                    Random.Range(-shakeIntensity, shakeIntensity), 0f);             // Déplacement aléatoire pour l'effet de tremblement
             }
             else
             {
-                // Fin du tremblement, réinitialise la position du texte
-                isShaking = false;
-                ammoText.transform.localPosition = originalPosition;
+                isShaking = false;                                                  // Fin du tremblement
+                ammoText.transform.localPosition = originalPosition;               // Remet le texte à sa position d'origine
             }
         }
     }
 
-
-    // Permet de déclencher le tremblement depuis d'autres scripts, comme le WeaponController lorsqu'on tire
-    private void TriggerShake() { isShaking = true; shakeTimer = 0f; }
+    private void TriggerShake() { isShaking = true; shakeTimer = 0f; }            // Démarre le tremblement — appelé à chaque tir
 }

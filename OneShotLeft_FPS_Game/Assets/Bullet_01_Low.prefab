@@ -317,7 +317,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   launchForce: 50
-  damage: 100
+  damage: 20
   pickupRadius: 1
   playerLayer:
     serializedVersion: 2
