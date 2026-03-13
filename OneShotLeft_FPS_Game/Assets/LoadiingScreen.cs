@@ -174,6 +174,11 @@ public class LoadingScreen : MonoBehaviour
 
     // ─── API publique ─────────────────────────────────────────────────────
 
+    // Retourne true si le panneau de chargement est actuellement visible.
+    // À utiliser à la place de gameObject.activeSelf dans les autres scripts
+    // (le GameObject du LoadingScreen reste toujours actif en scène).
+    public bool IsVisible => loadingPanel != null && loadingPanel.activeSelf;
+
     // Affiche l'écran de chargement et démarre avec le panneau d'intro.
     public void Show()
     {

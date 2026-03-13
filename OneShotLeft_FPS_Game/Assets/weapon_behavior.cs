@@ -127,8 +127,10 @@ public class WeaponController : MonoBehaviour
 
     void Update()
     {
-        // Bloque le tir pendant le chargement — le curseur est libre et peut déclencher un clic involontaire.
-        if (LoadingScreen.Instance != null && LoadingScreen.Instance.gameObject.activeSelf) return;
+        // Bloque le tir pendant le chargement en vérifiant si le loadingPanel est visible.
+        // On utilise IsVisible (qui teste loadingPanel.activeSelf) et NON gameObject.activeSelf,
+        // car le GameObject du LoadingScreen reste actif en permanence dans la scène.
+        if (LoadingScreen.Instance != null && LoadingScreen.Instance.IsVisible) return;
 
         // Écoute le clic gauche à chaque frame et tente un tir si le bouton est pressé.
         if (Input.GetMouseButtonDown(0))
