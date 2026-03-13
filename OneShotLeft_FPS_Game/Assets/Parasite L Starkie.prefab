@@ -489,16 +489,16 @@ MonoBehaviour:
   attackRange: 5
   attackCooldown: 1
   attackDamage: 20
-  detectionRange: 6.1
-  hearingRange: 6.21
+  detectionRange: 12.11
+  hearingRange: 22.6
   losePlayerTime: 4
   obstacleMask:
     serializedVersion: 2
     m_Bits: 128
   walkSpeed: 20
-  runSpeed: 40
+  runSpeed: 50
   rotateSpeed: 5
-  patrolRadius: 10
+  patrolRadius: 30
   patrolWaitMin: 2
   patrolWaitMax: 5
   patrolSamples: 5

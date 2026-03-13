@@ -59,6 +59,12 @@ public class NavMeshBaker : MonoBehaviour
     // avant de rendre la main, garantissant que les zombies peuvent naviguer dès le spawn.
     public IEnumerator BakeNavMeshRoutine()
     {
+        // Force la prise en compte de tous les objets de la scène, statiques ou non
+        surface.collectObjects = CollectObjects.All;
+        surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+        surface.BuildNavMesh();
+
+
         // Attend le délai configuré pour s'assurer que tous les objets de la map
         // sont bien présents dans la scène avant que le bake ne démarre.
         yield return new WaitForSeconds(bakeDelay);

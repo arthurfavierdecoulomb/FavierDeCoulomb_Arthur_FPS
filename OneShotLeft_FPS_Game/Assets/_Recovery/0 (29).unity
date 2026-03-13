@@ -5686,8 +5686,6 @@ MonoBehaviour:
   ceilingYOffset: 10
   decoYOffset: 0
   glassVsWoodChance: 0.151
-  singleDoorYOffset: 4
-  doubleDoorYOffset: 4
   roomCount: 8
   tileSize: 8
   mapWidth: 30
@@ -5748,7 +5746,7 @@ MonoBehaviour:
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_UseGeometry: 0
+  m_UseGeometry: 1
   m_DefaultArea: 0
   m_GenerateLinks: 0
   m_IgnoreNavMeshAgent: 1
@@ -5756,7 +5754,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.1
+  m_VoxelSize: 0.13333334
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: c1720c2bd54d5ce489eff563b63bc528, type: 2}
   m_BuildHeightMesh: 0

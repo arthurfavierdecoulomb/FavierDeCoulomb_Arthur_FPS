@@ -554,7 +554,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -263.7689, y: 0, z: -141.91023, w: 109.37775}
+  m_margin: {x: -263.7689, y: 0, z: -141.91023, w: -24.326645}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1941,7 +1941,7 @@ MonoBehaviour:
   titleImpactSound: {fileID: 8300000, guid: 8aabb68d9ae87014898cd597f57b2cdc, type: 3}
   typewriterTickSound: {fileID: 8300000, guid: af64d201f981dcc40b7c517ab48134c1, type: 3}
   titleSoundVolume: 1
-  typewriterVolume: 0.616
+  typewriterVolume: 0.4
 --- !u!4 &413470527
 Transform:
   m_ObjectHideFlags: 0
@@ -5686,8 +5686,6 @@ MonoBehaviour:
   ceilingYOffset: 10
   decoYOffset: 0
   glassVsWoodChance: 0.151
-  singleDoorYOffset: 4
-  doubleDoorYOffset: 4
   roomCount: 8
   tileSize: 8
   mapWidth: 30
@@ -5748,7 +5746,7 @@ MonoBehaviour:
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_UseGeometry: 0
+  m_UseGeometry: 1
   m_DefaultArea: 0
   m_GenerateLinks: 0
   m_IgnoreNavMeshAgent: 1
@@ -5756,7 +5754,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.1
+  m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: c1720c2bd54d5ce489eff563b63bc528, type: 2}
   m_BuildHeightMesh: 0

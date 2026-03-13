@@ -53,8 +53,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.34951782, y: 6.160263, z: 3.021904}
-  m_Center: {x: -0.008102417, y: 2.9272065, z: 1.5684547}
+  m_Size: {x: 0.34951782, y: 5.5789757, z: 3.0219038}
+  m_Center: {x: -0.008102417, y: 3.2178502, z: 1.5684547}
 --- !u!114 &3509406690203330581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77,8 +77,11 @@ MonoBehaviour:
   detectionWidth: 2
   zombiesCanOpen: 1
   zombieTag: Zombie
-  openSound: {fileID: 0}
-  closeSound: {fileID: 0}
+  openSound: {fileID: 8300000, guid: 62622973cdfd1984bb7302347c9b7292, type: 3}
+  closeSound: {fileID: 8300000, guid: 41c1b10e74d7b3c41b6a92d9551de33a, type: 3}
+  minDistance: 3
+  maxDistance: 20
+  maxVolume: 1
 --- !u!1 &5352636733962130868
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,8 +110,8 @@ Transform:
   m_GameObject: {fileID: 5352636733962130868}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.04, y: 3.00153, z: 1.63}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalPosition: {x: 0.0399, y: 3.2319, z: 1.6366}
+  m_LocalScale: {x: 3, y: 2.76809, z: 2.9385905}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4821582627101659735}
@@ -219,8 +222,8 @@ Transform:
   m_GameObject: {fileID: 6715216358354227801}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.04, y: 3.00153, z: 1.68}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalPosition: {x: 0.04, y: 3.2127, z: 1.7252}
+  m_LocalScale: {x: 3, y: 2.7874727, z: 3.0923612}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3229371034602221024}
@@ -356,8 +359,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.34951782, y: 6.160263, z: 3.021904}
-  m_Center: {x: -0.008102417, y: 2.9272065, z: 1.5684547}
+  m_Size: {x: 0.34951782, y: 5.5690804, z: 3.021904}
+  m_Center: {x: -0.008102417, y: 3.2227979, z: 1.5684547}
 --- !u!114 &2868200199867280576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -382,6 +385,9 @@ MonoBehaviour:
   zombieTag: Zombie
   openSound: {fileID: 8300000, guid: 41c1b10e74d7b3c41b6a92d9551de33a, type: 3}
   closeSound: {fileID: 8300000, guid: 62622973cdfd1984bb7302347c9b7292, type: 3}
+  minDistance: 3
+  maxDistance: 20
+  maxVolume: 1
 --- !u!1 &8043789037430581704
 GameObject:
   m_ObjectHideFlags: 0

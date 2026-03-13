@@ -262,8 +262,7 @@ public class DeathScreen : MonoBehaviour                                        
         while (btn < slideDuration)
         {
             btn += Time.deltaTime;
-            float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(btn / slideDuration), 3f); // Easing cubic out
-            respawnButton?.GetComponent<RectTransform>().SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0, 0);
+            float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(btn / slideDuration), 3f); 
             if (respawnButton != null) { respawnButton.GetComponent<RectTransform>().anchoredPosition = Vector3.Lerp(rStart, rEnd, t); if (rCG != null) rCG.alpha = t; }
             if (quitButton != null) { quitButton.GetComponent<RectTransform>().anchoredPosition = Vector3.Lerp(qStart, qEnd, t); if (qCG != null) qCG.alpha = t; }
             yield return null;

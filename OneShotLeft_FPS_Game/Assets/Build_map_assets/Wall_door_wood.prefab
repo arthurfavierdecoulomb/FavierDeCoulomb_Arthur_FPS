@@ -53,8 +53,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.34951782, y: 6.160263, z: 3.021904}
-  m_Center: {x: -0.008102417, y: 2.9272065, z: 1.5684547}
+  m_Size: {x: 8.944519, y: 5.4507604, z: 3.133358}
+  m_Center: {x: 0.53601074, y: 3.2819579, z: 1.6241817}
 --- !u!114 &1556126331140831309
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,13 +72,16 @@ MonoBehaviour:
   closeSpeed: 2
   rotationAxis: {x: 0, y: 1, z: 0}
   invertDirection: 0
-  closeDelay: 3
-  detectionDepth: 20
-  detectionWidth: 20
+  closeDelay: 2
+  detectionDepth: 30
+  detectionWidth: 30
   zombiesCanOpen: 1
   zombieTag: Zombie
   openSound: {fileID: 8300000, guid: 41c1b10e74d7b3c41b6a92d9551de33a, type: 3}
   closeSound: {fileID: 8300000, guid: 62622973cdfd1984bb7302347c9b7292, type: 3}
+  minDistance: 3
+  maxDistance: 20
+  maxVolume: 1
 --- !u!1 &2827011303740856304
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,8 +110,8 @@ Transform:
   m_GameObject: {fileID: 2827011303740856304}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.04, y: 3.00153, z: 1.68}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalPosition: {x: 0.04, y: 3.283, z: 1.6847}
+  m_LocalScale: {x: 3, y: 2.7168007, z: 3.009683}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6658168421161354129}
