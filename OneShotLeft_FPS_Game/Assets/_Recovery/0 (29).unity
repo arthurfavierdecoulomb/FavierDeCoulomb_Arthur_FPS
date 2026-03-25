@@ -5667,10 +5667,10 @@ MonoBehaviour:
   floorPrefab: {fileID: 487412180501535908, guid: 136cadafa90b88045963b1067640eeaf, type: 3}
   ceilingPrefab: {fileID: 487412180501535908, guid: 0c6f0d01ce3633a4cb2fe6eafacc305d, type: 3}
   wallLongPrefab: {fileID: 7744500492132486055, guid: 8be9758bb1121864ca7f1da9dc723e8a, type: 3}
-  wallDoorWoodPrefab: {fileID: 6268760146227141819, guid: b0ab46dc56f28d64184965464b57f0a7, type: 3}
-  wallDoubleDoorWoodPrefab: {fileID: 8043789037430581704, guid: a92cec83c55b39f45a06847bce3ece48, type: 3}
-  wallDoorGlassPrefab: {fileID: 7356331897866542184, guid: 549cfb0c9eaace848a8bc410b5c5c894, type: 3}
-  wallDoubleDoorGlassPrefab: {fileID: 7348133114697653017, guid: c482a347bdf44cc4bb90d438ee555140, type: 3}
+  wallDoorWoodPrefab: {fileID: 0}
+  wallDoubleDoorWoodPrefab: {fileID: 0}
+  wallDoorGlassPrefab: {fileID: 0}
+  wallDoubleDoorGlassPrefab: {fileID: 0}
   grossePoubellePrefab: {fileID: 3093829977852513333, guid: 5cb5f23b3d8c8d74194d3a162d0b78a6, type: 3}
   pileDePalletsPrefab: {fileID: 6830463451421068767, guid: c06c096ba3e28d04bace5cbe7c23fcff, type: 3}
   tonneauxPrefab: {fileID: 5761959391162556867, guid: c631431f59ce4fe489f96fa8952e9d84, type: 3}
@@ -5686,6 +5686,8 @@ MonoBehaviour:
   ceilingYOffset: 10
   decoYOffset: 0
   glassVsWoodChance: 0.151
+  singleDoorYOffset: 0
+  doubleDoorYOffset: 0
   roomCount: 8
   tileSize: 8
   mapWidth: 30
@@ -5754,7 +5756,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.13333334
+  m_VoxelSize: 0.1
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: c1720c2bd54d5ce489eff563b63bc528, type: 2}
   m_BuildHeightMesh: 0
