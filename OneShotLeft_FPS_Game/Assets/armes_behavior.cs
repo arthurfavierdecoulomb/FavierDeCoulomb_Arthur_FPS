@@ -23,7 +23,11 @@ public class ArmFollowCamera : MonoBehaviour
 
     void Start()
     {
+<<<<<<< Updated upstream
         // Si les références ne sont pas assignées dans l'inspecteur, tente de les trouver automatiquement
+=======
+        // Si aucune caméra n'est assignée, utilise la caméra principale
+>>>>>>> Stashed changes
         if (cameraTransform == null)
             cameraTransform = Camera.main.transform;                                // Fallback : utilise la caméra taguée MainCamera
     }
@@ -36,11 +40,19 @@ public class ArmFollowCamera : MonoBehaviour
 
     void LateUpdate()
     {
+<<<<<<< Updated upstream
         // Vérification des références
         if (cameraTransform == null || playerMovement == null) return;             // Sécurité : évite les erreurs nulles
 
         // Rotation du bras pour suivre la caméra + correction
         transform.rotation = cameraTransform.rotation * Quaternion.Euler(rotationCorrection); // Le bras regarde toujours dans la même direction que la caméra
+=======
+        // Assure que les références sont valides
+        if (cameraTransform == null || playerMovement == null) return;
+
+        // Applique la rotation de la caméra avec une correction
+        transform.rotation = cameraTransform.rotation * Quaternion.Euler(rotationCorrection);
+>>>>>>> Stashed changes
 
         // Position de base du bras
         Vector3 finalOffset = localOffset;                                         // On part de l'offset de base, qu'on va modifier avec le bob
@@ -55,7 +67,11 @@ public class ArmFollowCamera : MonoBehaviour
             float bobSpeed;
             float bobAmount;
 
+<<<<<<< Updated upstream
             // Priorité : accroupi > sprint > marche
+=======
+            // Ajuste la vitesse et l'amplitude du bob en fonction de l'état du joueur
+>>>>>>> Stashed changes
             if (playerMovement.IsCrouching())
             {
                 bobSpeed = walkBobSpeed;                                           // Même rythme que la marche
@@ -75,9 +91,15 @@ public class ArmFollowCamera : MonoBehaviour
             // Avance du timer de bob
             bobTimer += Time.deltaTime * bobSpeed;                                 // Le timer s'écoule plus ou moins vite selon l'état
 
+<<<<<<< Updated upstream
             // Calcul du bob en X et Y
             float bobY = Mathf.Sin(bobTimer) * bobAmount;                         // Mouvement vertical : monte et descend (sinus)
             float bobX = Mathf.Cos(bobTimer * 0.5f) * bobAmount * 0.5f;          // Mouvement latéral : balancement gauche/droite (cosinus demi-fréquence)
+=======
+            // Calcule les offsets de bobbing pour les axes X et Y afin de créer un mouvement de va-et-vient
+            float bobY = Mathf.Sin(bobTimer) * bobAmount;
+            float bobX = Mathf.Cos(bobTimer * 0.5f) * bobAmount * 0.5f;
+>>>>>>> Stashed changes
 
             finalOffset += new Vector3(bobX, bobY, 0f);                           // On ajoute le bob à l'offset de base
         }
@@ -87,7 +109,11 @@ public class ArmFollowCamera : MonoBehaviour
             bobTimer = 0f;                                                         // Repart de zéro pour un bob propre au prochain mouvement
         }
 
+<<<<<<< Updated upstream
         // Position finale du bras : position de la caméra + offset transformé
+=======
+        // Positionne le bras en fonction de la position de la caméra et de l'offset calculé
+>>>>>>> Stashed changes
         transform.position =
             cameraTransform.position +
             cameraTransform.TransformDirection(finalOffset);                       // TransformDirection convertit l'offset local en coordonnées monde

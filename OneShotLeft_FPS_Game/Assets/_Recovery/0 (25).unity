@@ -246,7 +246,11 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
+<<<<<<< Updated upstream
   m_fontStyle: 32
+=======
+  m_fontStyle: 0
+>>>>>>> Stashed changes
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -312,11 +316,14 @@ MonoBehaviour:
   lowHealthThreshold: 20
   shakeIntensity: 10
   shakeDuration: 0.2
+<<<<<<< Updated upstream
   healthLoopSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
   soundStartThreshold: 50
   pitchHigh: 1.2
   pitchLow: 0.5
   healthSoundVolume: 0.5
+=======
+>>>>>>> Stashed changes
 --- !u!1 &76407317
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,6 +460,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 76407317}
   m_CullTransparentMesh: 1
+<<<<<<< Updated upstream
 --- !u!1 &94916553
 GameObject:
   m_ObjectHideFlags: 0
@@ -590,6 +598,8 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 16.45}
   m_SizeDelta: {x: 200, y: -32.9}
   m_Pivot: {x: 0.5, y: 0.5}
+=======
+>>>>>>> Stashed changes
 --- !u!1 &108991586
 GameObject:
   m_ObjectHideFlags: 0
@@ -659,6 +669,7 @@ MonoBehaviour:
   shotSound: {fileID: 8300000, guid: 7abb29ed1a21a13478f1e2986f952da3, type: 3}
   leftSound: {fileID: 8300000, guid: 7abb29ed1a21a13478f1e2986f952da3, type: 3}
   introVolume: 1
+<<<<<<< Updated upstream
 --- !u!1 &109471406
 GameObject:
   m_ObjectHideFlags: 0
@@ -780,6 +791,8 @@ RectTransform:
   m_AnchoredPosition: {x: -107.4, y: -121.999985}
   m_SizeDelta: {x: 60, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+=======
+>>>>>>> Stashed changes
 --- !u!1 &140837281
 GameObject:
   m_ObjectHideFlags: 0
@@ -1078,7 +1091,11 @@ MonoBehaviour:
   shootSound: {fileID: 8300000, guid: 62fb3606ff2a8bd43b9b8d1e9c7a7ff2, type: 3}
   reloadSound: {fileID: 8300000, guid: 4a846265cad8e1248907d0b6e23665de, type: 3}
   emptySound: {fileID: 8300000, guid: 90ea2b8cff89e5b449ecb1bf97ba3dd4, type: 3}
+<<<<<<< Updated upstream
   weaponVolume: 1
+=======
+  weaponVolume: 0.583
+>>>>>>> Stashed changes
 --- !u!4 &188950719 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1151388028547126963, guid: ebba628353612364cb82c59bc16a4605, type: 3}
@@ -1356,6 +1373,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 266921854}
   m_CullTransparentMesh: 1
+<<<<<<< Updated upstream
 --- !u!1 &269203313
 GameObject:
   m_ObjectHideFlags: 0
@@ -1492,6 +1510,8 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+=======
+>>>>>>> Stashed changes
 --- !u!1 &323494245
 GameObject:
   m_ObjectHideFlags: 0
@@ -1504,7 +1524,11 @@ GameObject:
   - component: {fileID: 323494248}
   - component: {fileID: 323494247}
   m_Layer: 5
+<<<<<<< Updated upstream
   m_Name: TitleText
+=======
+  m_Name: TitleText_victory
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1549,7 +1573,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
+<<<<<<< Updated upstream
   m_text: TitleText
+=======
+  m_text: VictoryText
+>>>>>>> Stashed changes
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 58403047f57844d4aa4545d6aa4cca77, type: 2}
   m_sharedMaterial: {fileID: -7758785297176243808, guid: 58403047f57844d4aa4545d6aa4cca77, type: 2}
@@ -1905,14 +1933,22 @@ RectTransform:
   m_GameObject: {fileID: 371159383}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+<<<<<<< Updated upstream
   m_LocalScale: {x: 1, y: 1, z: 1}
+=======
+  m_LocalScale: {x: 0.77374, y: 0.77374, z: 0.77374}
+>>>>>>> Stashed changes
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 434526558}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
+<<<<<<< Updated upstream
   m_AnchoredPosition: {x: -381.39996, y: -247}
+=======
+  m_AnchoredPosition: {x: -295.1, y: -194.75}
+>>>>>>> Stashed changes
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &371159385
@@ -2016,6 +2052,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 371159383}
   m_CullTransparentMesh: 1
+<<<<<<< Updated upstream
 --- !u!1 &413014888
 GameObject:
   m_ObjectHideFlags: 0
@@ -2217,6 +2254,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+=======
+>>>>>>> Stashed changes
 --- !u!1 &434526557
 GameObject:
   m_ObjectHideFlags: 0
@@ -2559,7 +2598,11 @@ GameObject:
   - component: {fileID: 491745297}
   - component: {fileID: 491745296}
   m_Layer: 5
+<<<<<<< Updated upstream
   m_Name: Panel
+=======
+  m_Name: Panel_victory
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2701,7 +2744,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+<<<<<<< Updated upstream
 --- !u!1 &557142557
+=======
+--- !u!1 &556006408
+>>>>>>> Stashed changes
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2709,24 +2756,61 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+<<<<<<< Updated upstream
   - component: {fileID: 557142561}
   - component: {fileID: 557142560}
   - component: {fileID: 557142559}
   - component: {fileID: 557142558}
   m_Layer: 5
   m_Name: UI Victoire
+=======
+  - component: {fileID: 556006409}
+  - component: {fileID: 556006412}
+  - component: {fileID: 556006411}
+  - component: {fileID: 556006410}
+  m_Layer: 5
+  m_Name: Victory_Canva
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< Updated upstream
 --- !u!114 &557142558
+=======
+--- !u!224 &556006409
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 556006408}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 974598780}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
+--- !u!114 &556006410
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 557142557}
+=======
+  m_GameObject: {fileID: 556006408}
+>>>>>>> Stashed changes
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
@@ -2737,19 +2821,31 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+<<<<<<< Updated upstream
 --- !u!114 &557142559
+=======
+--- !u!114 &556006411
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 557142557}
+=======
+  m_GameObject: {fileID: 556006408}
+>>>>>>> Stashed changes
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
+<<<<<<< Updated upstream
   m_UiScaleMode: 1
+=======
+  m_UiScaleMode: 0
+>>>>>>> Stashed changes
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
@@ -2760,13 +2856,21 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 0
+<<<<<<< Updated upstream
 --- !u!223 &557142560
+=======
+--- !u!223 &556006412
+>>>>>>> Stashed changes
 Canvas:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 557142557}
+=======
+  m_GameObject: {fileID: 556006408}
+>>>>>>> Stashed changes
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 0
@@ -2783,6 +2887,7 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+<<<<<<< Updated upstream
 --- !u!224 &557142561
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2803,6 +2908,8 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+=======
+>>>>>>> Stashed changes
 --- !u!1 &599974083
 GameObject:
   m_ObjectHideFlags: 0
@@ -2875,6 +2982,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 599974083}
   m_CullTransparentMesh: 1
+<<<<<<< Updated upstream
 --- !u!1 &621613256
 GameObject:
   m_ObjectHideFlags: 0
@@ -2915,6 +3023,13 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 3.5}
   m_SizeDelta: {x: -700, y: -357}
   m_Pivot: {x: 0.5, y: 0.5}
+=======
+--- !u!1 &621613256 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6115697916122931118, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+  m_PrefabInstance: {fileID: 3066562017890772800}
+  m_PrefabAsset: {fileID: 0}
+>>>>>>> Stashed changes
 --- !u!1 &630580914
 GameObject:
   m_ObjectHideFlags: 0
@@ -3104,7 +3219,11 @@ MonoBehaviour:
   speedPerWave: 0.4
   timeBetweenWaves: 5
   spawnYOffset: 0.1
+<<<<<<< Updated upstream
 --- !u!1 &729052174
+=======
+--- !u!1 &659992712
+>>>>>>> Stashed changes
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3112,37 +3231,63 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+<<<<<<< Updated upstream
   - component: {fileID: 729052175}
   - component: {fileID: 729052176}
   m_Layer: 0
   m_Name: AtmoshereManager
+=======
+  - component: {fileID: 659992713}
+  - component: {fileID: 659992714}
+  m_Layer: 0
+  m_Name: AtmosphereManager
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< Updated upstream
 --- !u!4 &729052175
+=======
+--- !u!4 &659992713
+>>>>>>> Stashed changes
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 729052174}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 515.04974, y: 0, z: 854.08264}
+=======
+  m_GameObject: {fileID: 659992712}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 54.61368, y: 0, z: 383.14926}
+>>>>>>> Stashed changes
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+<<<<<<< Updated upstream
 --- !u!114 &729052176
+=======
+--- !u!114 &659992714
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 729052174}
+=======
+  m_GameObject: {fileID: 659992712}
+>>>>>>> Stashed changes
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbd2e50b3b10ce2449d7fa8e3f98148b, type: 3}
@@ -4090,7 +4235,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 907713530}
+<<<<<<< Updated upstream
   - component: {fileID: 907713529}
+=======
+>>>>>>> Stashed changes
   - component: {fileID: 907713531}
   m_Layer: 0
   m_Name: UIVictoireManager
@@ -4099,6 +4247,7 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< Updated upstream
 --- !u!114 &907713529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4131,6 +4280,8 @@ MonoBehaviour:
   typewriterTickSound: {fileID: 0}
   titleSoundVolume: 1
   typewriterVolume: 0.4
+=======
+>>>>>>> Stashed changes
 --- !u!4 &907713530
 Transform:
   m_ObjectHideFlags: 0
@@ -4193,10 +4344,17 @@ GameObject:
   m_Layer: 5
   m_Name: LoadingScreen
   m_TagString: Untagged
+<<<<<<< Updated upstream
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+=======
+  m_Icon: {fileID: 2800000, guid: 50d1ea51731fa43db9ce0ec4fe5f0b07, type: 3}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+>>>>>>> Stashed changes
 --- !u!114 &973053821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4280,6 +4438,41 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+<<<<<<< Updated upstream
+=======
+--- !u!1 &974598779
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 974598780}
+  m_Layer: 0
+  m_Name: VictoryScreen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &974598780
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974598779}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -245, y: -213, z: 636.67346}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1756546237}
+  m_Father: {fileID: 556006409}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+>>>>>>> Stashed changes
 --- !u!1 &998654932
 GameObject:
   m_ObjectHideFlags: 0
@@ -4368,8 +4561,11 @@ MonoBehaviour:
   messageDuration: 3
   staminaThreshold: 5
   fatigueCooldown: 2
+<<<<<<< Updated upstream
   tickSound: {fileID: 8300000, guid: af64d201f981dcc40b7c517ab48134c1, type: 3}
   tickVolume: 0.4
+=======
+>>>>>>> Stashed changes
 --- !u!114 &998654935
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4632,14 +4828,22 @@ RectTransform:
   m_GameObject: {fileID: 1081758775}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+<<<<<<< Updated upstream
   m_LocalScale: {x: 9.7276, y: 0.051276237, z: 1}
+=======
+  m_LocalScale: {x: 7.5266333, y: 0.039674476, z: 0.77374}
+>>>>>>> Stashed changes
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 434526558}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
+<<<<<<< Updated upstream
   m_AnchoredPosition: {x: 0, y: -268}
+=======
+  m_AnchoredPosition: {x: 0, y: -211}
+>>>>>>> Stashed changes
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1081758777
@@ -5016,7 +5220,11 @@ GameObject:
   - component: {fileID: 1345936766}
   - component: {fileID: 1345936765}
   m_Layer: 5
+<<<<<<< Updated upstream
   m_Name: Motivational Text
+=======
+  m_Name: Motivational Text_victory
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5297,11 +5505,14 @@ MonoBehaviour:
   flashSpeed: 5
   shakeIntensity: 5
   shakeDuration: 0.1
+<<<<<<< Updated upstream
   staminaLoopSound: {fileID: 8300000, guid: 8588b3dd1e241bc4cafac83b1970ae10, type: 3}
   soundStartThreshold: 60
   pitchHigh: 1.2
   pitchLow: 0.5
   staminaSoundVolume: 0.5
+=======
+>>>>>>> Stashed changes
 --- !u!1 &1387186510
 GameObject:
   m_ObjectHideFlags: 0
@@ -5524,6 +5735,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: d6b8d2b37db166845a9abf9028545180, type: 3}
   - {fileID: 8300000, guid: 7ae53d0bb561c1a47b936e30521df715, type: 3}
   - {fileID: 8300000, guid: ae0e4a8050134e04986f61922f3ba869, type: 3}
+<<<<<<< Updated upstream
   jumpSound: {fileID: 8300000, guid: ba39341b0f136e94da7ae923e6d7121b, type: 3}
   landSound: {fileID: 8300000, guid: aab8e9a8e17bd40459b0dcca9f70be8b, type: 3}
   walkInterval: 0.5
@@ -5534,6 +5746,19 @@ MonoBehaviour:
   crouchVolume: 0.3
   jumpVolume: 0.9
   landVolume: 1
+=======
+  - {fileID: 8300000, guid: afb73348f488d1341820828a3b2c6644, type: 3}
+  jumpSound: {fileID: 8300000, guid: ba39341b0f136e94da7ae923e6d7121b, type: 3}
+  landSound: {fileID: 8300000, guid: aab8e9a8e17bd40459b0dcca9f70be8b, type: 3}
+  walkInterval: 0.5
+  sprintInterval: 0.1
+  crouchInterval: 0.7
+  walkVolume: 0.8
+  sprintVolume: 0.809
+  crouchVolume: 0.3
+  jumpVolume: 0.822
+  landVolume: 0.82
+>>>>>>> Stashed changes
 --- !u!1 &1390123608
 GameObject:
   m_ObjectHideFlags: 0
@@ -5738,8 +5963,13 @@ MonoBehaviour:
   player: {fileID: 1387186510}
   playerSpawnYOffset: 2
   gameUIPanel: {fileID: 1186428399}
+<<<<<<< Updated upstream
   deathScreenPanel: {fileID: 0}
   victoryScreenPanel: {fileID: 0}
+=======
+  deathScreenPanel: {fileID: 621613256}
+  victoryScreenPanel: {fileID: 1756546236}
+>>>>>>> Stashed changes
   waveManager: {fileID: 633508317}
   zombiePrefab: {fileID: 4562475909303982152, guid: 91f54e34babeacb49a3e75b73abbb918, type: 3}
   zombiesPerSmallRoom: 1
@@ -5826,7 +6056,11 @@ GameObject:
   - component: {fileID: 1509269415}
   - component: {fileID: 1509269414}
   m_Layer: 5
+<<<<<<< Updated upstream
   m_Name: Recommencer
+=======
+  m_Name: Recommencer_victory
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6057,6 +6291,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1576888888}
   m_CullTransparentMesh: 1
+<<<<<<< Updated upstream
 --- !u!1 &1595481295
 GameObject:
   m_ObjectHideFlags: 0
@@ -6253,6 +6488,8 @@ RectTransform:
   m_AnchoredPosition: {x: 100.00001, y: -121.999985}
   m_SizeDelta: {x: 60, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+=======
+>>>>>>> Stashed changes
 --- !u!1001 &1651303628
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6402,7 +6639,11 @@ GameObject:
   - component: {fileID: 1716829392}
   - component: {fileID: 1716829391}
   m_Layer: 5
+<<<<<<< Updated upstream
   m_Name: Quit Button
+=======
+  m_Name: Quit Button_victory
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6537,14 +6778,22 @@ RectTransform:
   m_GameObject: {fileID: 1720990112}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+<<<<<<< Updated upstream
   m_LocalScale: {x: 9.7276, y: 0.051276237, z: 1}
+=======
+  m_LocalScale: {x: 7.5266333, y: 0.039674476, z: 0.77374}
+>>>>>>> Stashed changes
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 434526558}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
+<<<<<<< Updated upstream
   m_AnchoredPosition: {x: 0, y: -268}
+=======
+  m_AnchoredPosition: {x: 0, y: -211}
+>>>>>>> Stashed changes
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1720990114
@@ -6608,9 +6857,15 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1756546236}
+<<<<<<< Updated upstream
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+=======
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -636.67346}
+  m_LocalScale: {x: 1.0575001, y: 1.0575001, z: 1.0575001}
+>>>>>>> Stashed changes
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 491745295}
@@ -6618,6 +6873,7 @@ RectTransform:
   - {fileID: 1345936764}
   - {fileID: 1509269413}
   - {fileID: 1716829390}
+<<<<<<< Updated upstream
   m_Father: {fileID: 557142561}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6626,6 +6882,16 @@ RectTransform:
   m_SizeDelta: {x: -700, y: -357}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1765363772
+=======
+  m_Father: {fileID: 974598780}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 238.59613, y: 216.31145}
+  m_SizeDelta: {x: 99.99994, y: 93.118164}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1786373599
+>>>>>>> Stashed changes
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6633,22 +6899,36 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+<<<<<<< Updated upstream
   - component: {fileID: 1765363773}
   - component: {fileID: 1765363775}
   - component: {fileID: 1765363774}
   m_Layer: 5
   m_Name: Text (TMP)
+=======
+  - component: {fileID: 1786373600}
+  - component: {fileID: 1786373603}
+  - component: {fileID: 1786373602}
+  - component: {fileID: 1786373601}
+  m_Layer: 5
+  m_Name: Death_Canva
+>>>>>>> Stashed changes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< Updated upstream
 --- !u!224 &1765363773
+=======
+--- !u!224 &1786373600
+>>>>>>> Stashed changes
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 1765363772}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -6663,11 +6943,29 @@ RectTransform:
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1765363774
+=======
+  m_GameObject: {fileID: 1786373599}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3066562017890772801}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
+--- !u!114 &1786373601
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 1765363772}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -6787,6 +7085,9 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1909300446}
+=======
+  m_GameObject: {fileID: 1786373599}
+>>>>>>> Stashed changes
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
@@ -6797,19 +7098,31 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+<<<<<<< Updated upstream
 --- !u!114 &1909300449
+=======
+--- !u!114 &1786373602
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 1909300446}
+=======
+  m_GameObject: {fileID: 1786373599}
+>>>>>>> Stashed changes
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
+<<<<<<< Updated upstream
   m_UiScaleMode: 1
+=======
+  m_UiScaleMode: 0
+>>>>>>> Stashed changes
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
@@ -6820,13 +7133,21 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 0
+<<<<<<< Updated upstream
 --- !u!223 &1909300450
+=======
+--- !u!223 &1786373603
+>>>>>>> Stashed changes
 Canvas:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< Updated upstream
   m_GameObject: {fileID: 1909300446}
+=======
+  m_GameObject: {fileID: 1786373599}
+>>>>>>> Stashed changes
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 0
@@ -6843,6 +7164,7 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+<<<<<<< Updated upstream
 --- !u!224 &1909300451
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6863,6 +7185,8 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+=======
+>>>>>>> Stashed changes
 --- !u!1 &1942877071
 GameObject:
   m_ObjectHideFlags: 0
@@ -7277,22 +7601,161 @@ MonoBehaviour:
   sprintBobSpeed: 12
   sprintBobAmount: 0.06
   crouchBobAmount: 0.01
+<<<<<<< Updated upstream
+=======
+--- !u!1001 &3066562017890772800
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1786373600}
+    m_Modifications:
+    - target: {fileID: 1099733779517314087, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_text
+      value: DeathText
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -24.349548
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -10.188568
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4014134015138346392, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_Name
+      value: DeathScreen
+      objectReference: {fileID: 0}
+    - target: {fileID: 4014134015138346392, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6115697916122931118, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8635599425495739003, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: gameUIPanel
+      value: 
+      objectReference: {fileID: 1186428399}
+    - target: {fileID: 8635599425495739003, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+      propertyPath: mapGenerator
+      value: 
+      objectReference: {fileID: 1465585932}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+--- !u!224 &3066562017890772801 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 3106787794588076685, guid: 33f5f341db1bbf04ca441a0c1f08540d, type: 3}
+  m_PrefabInstance: {fileID: 3066562017890772800}
+  m_PrefabAsset: {fileID: 0}
+>>>>>>> Stashed changes
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 973053824}
+<<<<<<< Updated upstream
+=======
+  - {fileID: 1786373600}
+  - {fileID: 556006409}
+>>>>>>> Stashed changes
   - {fileID: 1465585933}
   - {fileID: 898425880}
   - {fileID: 498883434}
   - {fileID: 1387186515}
+<<<<<<< Updated upstream
   - {fileID: 1909300451}
   - {fileID: 557142561}
+=======
+>>>>>>> Stashed changes
   - {fileID: 1546940222}
   - {fileID: 1186428403}
   - {fileID: 140837284}
   - {fileID: 108991587}
+<<<<<<< Updated upstream
   - {fileID: 413470527}
   - {fileID: 907713530}
   - {fileID: 633508316}
   - {fileID: 729052175}
+=======
+  - {fileID: 907713530}
+  - {fileID: 633508316}
+  - {fileID: 659992713}
+>>>>>>> Stashed changes

@@ -49,17 +49,32 @@ public class PlayerMovement : MonoBehaviour                                     
 
     void Start()
     {
+<<<<<<< Updated upstream
         controller = GetComponent<CharacterController>();                                        // R√©cup√®re le CharacterController sur ce GameObject
         staminaSystem = GetComponent<StaminaSystem>();                                              // R√©cup√®re le syst√®me de stamina (optionnel)
         footsteps = GetComponent<PlayerFootsteps>();                                            // R√©cup√®re le script de pas (optionnel)
 
         currentHeight = standingHeight;                                                             // Initialise la hauteur au maximum
+=======
+        // RÈcupËre les composants nÈcessaires
+        controller = GetComponent<CharacterController>();
+        staminaSystem = GetComponent<StaminaSystem>();
+        footsteps = GetComponent<PlayerFootsteps>();
+
+        // Initialise les hauteurs du personnage et de la camÈra
+        currentHeight = standingHeight;
+>>>>>>> Stashed changes
         targetHeight = standingHeight;
         controller.height = standingHeight;
 
         if (cameraTransform != null)
         {
+<<<<<<< Updated upstream
             currentCameraHeight = standingCameraHeight;                                             // Initialise la cam√©ra √† la hauteur debout
+=======
+            // Initialise la hauteur de la camÈra
+            currentCameraHeight = standingCameraHeight;
+>>>>>>> Stashed changes
             targetCameraHeight = standingCameraHeight;
             Vector3 camPos = cameraTransform.localPosition;
             camPos.y = standingCameraHeight;

@@ -28,16 +28,33 @@ public class PlayerHealth : MonoBehaviour                                       
 
     void Start()
     {
+<<<<<<< Updated upstream
         currentHealth = maxHealth;                                                  // Initialise la vie au maximum au démarrage
+=======
+        // Initialise la santé du joueur
+        currentHealth = maxHealth;
+>>>>>>> Stashed changes
 
         if (cameraBob == null)
             cameraBob = GetComponentInChildren<CameraBob>();                        // Cherche CameraBob dans les enfants si non assigné
 
+<<<<<<< Updated upstream
         DeathScreen = FindFirstObjectByType<DeathScreen>();                         // Trouve l'écran de mort dans la scène automatiquement
+=======
+
+        // Trouve le DeathScreen dans la scène (assume qu'il n'y en a qu'un)
+        DeathScreen = FindFirstObjectByType<DeathScreen>();
+>>>>>>> Stashed changes
         if (DeathScreen == null)
             Debug.LogWarning("DeathScreen non trouvé dans la scène !");             // Avertit si l'écran de mort est absent de la scène
 
+<<<<<<< Updated upstream
         audioSource = GetComponent<AudioSource>();                                  // Récupère l'AudioSource si elle existe déjà
+=======
+
+        // Assure qu'il y a un AudioSource sur ce GameObject pour jouer les sons de dégâts et de mort
+        audioSource = GetComponent<AudioSource>();
+>>>>>>> Stashed changes
         if (audioSource == null)
             audioSource = gameObject.AddComponent<AudioSource>();                   // Sinon en crée une automatiquement
         audioSource.playOnAwake = false;                                           // Ne joue pas au démarrage
@@ -48,12 +65,20 @@ public class PlayerHealth : MonoBehaviour                                       
     {
         if (isDead) return;                                                         // Ignore les dégâts si le joueur est déjà mort
 
+<<<<<<< Updated upstream
         currentHealth -= damage;                                                    // Réduit la vie du montant des dégâts reçus
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);                 // Empêche la vie de passer en négatif ou dépasser le max
+=======
+        // Applique les dégâts et clamp la santé entre 0 et maxHealth
+        currentHealth -= damage;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+>>>>>>> Stashed changes
 
+        // Déclenche le tremblement de la caméra
         if (cameraBob != null)
             cameraBob.Shake(shakeDuration, shakeIntensity);                        // Déclenche un camera shake pour un retour visuel immédiat
 
+        // Vérifie si le joueur est mort après avoir pris les dégâts
         if (currentHealth <= 0)
             Die();                                                                  // Déclenche la mort si la vie atteint zéro
         else
@@ -62,8 +87,14 @@ public class PlayerHealth : MonoBehaviour                                       
 
     private void Die()
     {
+<<<<<<< Updated upstream
         if (isDead) return;                                                         // Sécurité anti double-appel — Die() ne s'exécute qu'une seule fois
         isDead = true;                                                              // Verrouille l'état mort
+=======
+        // Empêche la mort multiple
+        if (isDead) return; 
+        isDead = true;
+>>>>>>> Stashed changes
 
         Debug.Log("le joueur creve");                                                   // Log de confirmation dans la console
 
@@ -73,20 +104,34 @@ public class PlayerHealth : MonoBehaviour                                       
             DeathScreen.ShowDeathScreen();                                          // Affiche l'écran de mort animé
         Debug.Log("DeathScreen affiché");                                      // Log de confirmation de l'affichage
 
+        // Désactive les contrôles du joueur (assume que le script de mouvement s'appelle PlayerMovement)
         PlayerMovement pm = GetComponent<PlayerMovement>();
         if (pm != null) pm.enabled = false;                                        // Désactive les contrôles du joueur à la mort
     }
 
     public void Respawn()
     {
+<<<<<<< Updated upstream
         isDead = false;                                                      // Réactive les dégâts
         currentHealth = maxHealth;                                                  // Restaure la vie complète
+=======
+        // Réinitialise la santé et les états du joueur
+        isDead = false;
+        currentHealth = maxHealth;
+>>>>>>> Stashed changes
 
+        // Réactive les contrôles du joueur
         PlayerMovement pm = GetComponent<PlayerMovement>();
         if (pm != null) pm.enabled = true;                                         // Réactive les contrôles du joueur
 
+<<<<<<< Updated upstream
         transform.position = Vector3.zero;                                         // Téléporte le joueur à l'origine de la scène
         Debug.Log("Joueur avec toute sa vie");                                      // Log de confirmation du respawn
+=======
+        // Réinitialise la position du joueur (ajustez selon votre système de spawn)
+        transform.position = Vector3.zero;
+        Debug.Log("Player respawned with full health!");
+>>>>>>> Stashed changes
     }
 
     void PlaySound(AudioClip clip)
@@ -100,4 +145,11 @@ public class PlayerHealth : MonoBehaviour                                       
     void Update() { }                                                               // Vide — j'avais mis des touches clavier de test ici, mais ont été retirés pour éviter les triches accidentelles
 
 
+<<<<<<< Updated upstream
+=======
+    void Update()
+    {
+
+    }
+>>>>>>> Stashed changes
 }

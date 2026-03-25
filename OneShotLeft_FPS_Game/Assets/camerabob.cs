@@ -1,6 +1,14 @@
 Ôªøusing UnityEngine;
 
+<<<<<<< Updated upstream
 public class CameraBob : MonoBehaviour                                                  // G√®re le bobbing de la cam√©ra, la respiration et le camera shake
+=======
+
+// Ce script gËre le bobbing de la camÈra pour simuler les
+// mouvements de marche et de sprint,
+// ainsi que la respiration du personnage.
+public class CameraBob : MonoBehaviour
+>>>>>>> Stashed changes
 {
     [Header("Bob - Marche")]
     [SerializeField] private float walkBobAmount = 0.05f;                               // Amplitude du bob en marche ‚Äî faible pour rester confortable
@@ -33,19 +41,33 @@ public class CameraBob : MonoBehaviour                                          
 
     void Start()
     {
+<<<<<<< Updated upstream
         playerMovement = GetComponentInParent<PlayerMovement>();                    // Cherche PlayerMovement sur le parent (la cam√©ra est enfant du joueur)
+=======
+        // Trouve le PlayerMovement sur un parent (assume que ce script est sur la camÈra enfant)
+        playerMovement = GetComponentInParent<PlayerMovement>();
+>>>>>>> Stashed changes
         if (playerMovement == null)
             Debug.LogError("CameraBob : PlayerMovement non trouv√© sur un parent !"); // Erreur critique si la r√©f√©rence manque
     }
 
+<<<<<<< Updated upstream
     void LateUpdate()                                                               // LateUpdate pour s'appliquer APR√àS PlayerMovement et MouseLook
     {
         if (playerMovement == null) return;                                         // S√©curit√© : ne fait rien si la r√©f√©rence manque
+=======
+   
+    void LateUpdate()
+    {
+        // Bloque le bobbing si le curseur est visible (Ècran de mort, menu, etc.)
+        if (playerMovement == null) return;
+>>>>>>> Stashed changes
 
         bool isMoving = playerMovement.GetCurrentSpeed() > 0.1f;                 // Vrai si le joueur se d√©place
         bool isSprinting = playerMovement.IsSprinting();                           // Vrai si le joueur est en sprint
         bool isGrounded = playerMovement.IsGrounded();                            // Vrai si le joueur est au sol
 
+<<<<<<< Updated upstream
         if (isMoving && isGrounded)
         {
             targetBobAmount = isSprinting ? sprintBobAmount : walkBobAmount;       // Bob prononc√© en sprint, discret en marche
@@ -59,6 +81,25 @@ public class CameraBob : MonoBehaviour                                          
 
         currentBobAmount = Mathf.Lerp(currentBobAmount, targetBobAmount, Time.deltaTime * bobTransitionSpeed); // Transition fluide de l'amplitude
         currentBobSpeed = Mathf.Lerp(currentBobSpeed, targetBobSpeed, Time.deltaTime * bobTransitionSpeed); // Transition fluide de la vitesse
+=======
+        // DÈtermine les cibles de bobbing en fonction de l'Ètat du joueur
+        if (isMoving && isGrounded)
+        {
+            // Ajuste la vitesse et l'amplitude du bob en fonction de l'Ètat du joueur
+            targetBobAmount = isSprinting ? sprintBobAmount : walkBobAmount;
+            targetBobSpeed = isSprinting ? sprintBobSpeed : walkBobSpeed;
+        }
+        else
+        {
+            // Si le joueur ne bouge pas ou n'est pas au sol, rÈinitialise le bobbing
+            targetBobAmount = 0f;
+            targetBobSpeed = walkBobSpeed;
+        }
+
+        // Lerp pour une transition fluide entre les Ètats de bobbing
+        currentBobAmount = Mathf.Lerp(currentBobAmount, targetBobAmount, Time.deltaTime * bobTransitionSpeed);
+        currentBobSpeed = Mathf.Lerp(currentBobSpeed, targetBobSpeed, Time.deltaTime * bobTransitionSpeed);
+>>>>>>> Stashed changes
 
         if (currentBobAmount > 0.001f)
             bobTimer += Time.deltaTime * currentBobSpeed;                          // Avance le timer seulement si le bob est actif
@@ -67,6 +108,7 @@ public class CameraBob : MonoBehaviour                                          
         float breathOffset = Mathf.Sin(Time.time * breathSpeed * Mathf.PI * 2f) * breathAmount;     // Respiration : oscillation lente ind√©pendante du mouvement
         float baseY = playerMovement.GetCurrentCameraHeight();                                      // Hauteur de base de la cam√©ra (g√©r√©e par PlayerMovement)
 
+<<<<<<< Updated upstream
         // ‚îÄ‚îÄ Camera Shake ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
         Vector3 shakeOffset = Vector3.zero;                                        // Offset du shake, nul par d√©faut
 
@@ -75,8 +117,29 @@ public class CameraBob : MonoBehaviour                                          
             shakeTimeRemaining -= Time.deltaTime;                                  // D√©compte du shake
 
             float normalizedTime = 1f - (shakeTimeRemaining / shakeTotalDuration); // Progression de 0 √† 1 pendant le shake
+=======
+        // Calcul de l'offset de respiration pour simuler la montÈe et la descente de la camÈra pendant la respiration
+        float breathOffset = Mathf.Sin(Time.time * breathSpeed * Mathf.PI * 2f) * breathAmount;
 
+        float baseY = playerMovement.GetCurrentCameraHeight();
+
+        
+        Vector3 shakeOffset = Vector3.zero;
+        // Gestion du tremblement de la camÈra
+        if (shakeTimeRemaining > 0f)
+        {
+            // IncrÈmente le timer de tremblement
+            shakeTimeRemaining -= Time.deltaTime;
+
+            // Calcule une valeur normalisÈe de 0 ‡ 1 pour le tremblement, o˘ 0 est le dÈbut et 1
+            // est la fin du tremblement
+            float normalizedTime = 1f - (shakeTimeRemaining / shakeTotalDuration);
+>>>>>>> Stashed changes
+
+            // Lerp de l'intensitÈ du tremblement de la valeur de dÈpart ‡ 0 au fil du temps,
+            // en utilisant une interpolation lisse pour un effet plus naturel
             float currentIntensity = Mathf.Lerp(
+<<<<<<< Updated upstream
                 shakeStartIntensity, 0f,
                 Mathf.SmoothStep(0f, 1f, normalizedTime)                           // Fade out smooth : l'intensit√© diminue progressivement
             );
@@ -99,5 +162,38 @@ public class CameraBob : MonoBehaviour                                          
         shakeTotalDuration = duration;                                           // Stocke la dur√©e totale pour le calcul du fade out
         shakeTimeRemaining = duration;                                           // Initialise le d√©compte
         shakeStartIntensity = intensity;                                          // Intensit√© maximale au d√©but du shake
+=======
+                // L'intensitÈ de dÈpart du tremblement, dÈfinie lors de l'appel ‡ Shake()
+                shakeStartIntensity,
+                0f,
+                Mathf.SmoothStep(0f, 1f, normalizedTime)
+            );
+
+            // GÈnËre un offset de tremblement alÈatoire dans les axes X et Y en utilisant
+            // Perlin Noise pour un mouvement plus fluide et naturel
+            float shakeX = Mathf.PerlinNoise(Time.time * shakeFrequency, 0f) * 2f - 1f;
+            float shakeY = Mathf.PerlinNoise(0f, Time.time * shakeFrequency) * 2f - 1f;
+
+            // Applique l'intensitÈ actuelle du tremblement ‡ l'offset gÈnÈrÈ
+            shakeOffset = new Vector3(shakeX, shakeY, 0f) * currentIntensity;
+        }
+
+        // Applique les offsets de bobbing, de respiration
+        // et de tremblement ‡ la position locale de la camÈra
+        Vector3 camPos = transform.localPosition;
+        camPos.y = baseY + bobOffset + breathOffset + shakeOffset.y;
+        camPos.x = shakeOffset.x;
+        transform.localPosition = camPos;
+    }
+
+    // MÈthode pour dÈclencher le tremblement de la
+    // camÈra avec une durÈe et une intensitÈ spÈcifiÈes
+    public void Shake(float duration, float intensity)
+    {
+        // Initialise les variables de tremblement avec les valeurs 
+        shakeTotalDuration = duration;
+        shakeTimeRemaining = duration;
+        shakeStartIntensity = intensity;
+>>>>>>> Stashed changes
     }
 }

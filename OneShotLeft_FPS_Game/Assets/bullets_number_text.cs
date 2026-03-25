@@ -3,14 +3,23 @@ using TMPro;
 
 public class AmmoUI : MonoBehaviour                                                 // Affiche les munitions en UI et dÃ©clenche effets visuels/sonores
 {
+    // celui ci est différent du script de comportement des armes,
+    // il est spécifiquement dédié à la gestion de l'affichage du
+    // nombre de munitions et de ses effets visuels (flash rouge et tremblement)
     [Header("References")]
     [SerializeField] private TextMeshProUGUI ammoText;                              // Texte TMP qui affiche le compteur de munitions
     [SerializeField] private WeaponController weaponController;                     // RÃ©fÃ©rence au WeaponController pour lire les munitions
 
     [Header("Flash Settings")]
+<<<<<<< Updated upstream
     [SerializeField] private Color normalColor = Color.white;                       // Couleur du texte quand les munitions sont disponibles
     [SerializeField] private Color emptyColor = Color.red;                         // Couleur du flash quand les munitions sont Ã  zÃ©ro
     [SerializeField] private float flashSpeed = 5f;                                // Vitesse du flash (plus Ã©levÃ© = plus rapide)
+=======
+    [SerializeField] private Color normalColor = Color.white;
+    [SerializeField] private Color emptyColor = Color.red;
+    [SerializeField] private float flashSpeed = 5f; 
+>>>>>>> Stashed changes
 
     [Header("Shake Settings")]
     [SerializeField] private float shakeIntensity = 10f;                            // Amplitude du tremblement en pixels
@@ -33,8 +42,16 @@ public class AmmoUI : MonoBehaviour                                             
 
     void Start()
     {
+        // Assure que les références sont assignées
         if (weaponController != null)
+<<<<<<< Updated upstream
             lastBulletCount = weaponController.GetCurrentBullets();                 // Initialise le compteur pour Ã©viter un faux dÃ©clenchement au dÃ©marrage
+=======
+        {
+            // Initialise le nombre de munitions affiché
+            lastBulletCount = weaponController.GetCurrentBullets();
+        }
+>>>>>>> Stashed changes
 
         if (ammoText != null)
             originalPosition = ammoText.transform.localPosition;                   // Stocke la position de repos du texte pour le tremblement
@@ -47,26 +64,48 @@ public class AmmoUI : MonoBehaviour                                             
 
     void Update()
     {
+<<<<<<< Updated upstream
         if (ammoText == null || weaponController == null) return;                   // SÃ©curitÃ© : Ã©vite les erreurs si les rÃ©fÃ©rences manquent
+=======
+        // Assure que les références sont valides avant de continuer
+        if (ammoText == null || weaponController == null) return;
+>>>>>>> Stashed changes
 
         int currentBullets = weaponController.GetCurrentBullets();                 // Lit le nombre de munitions actuel
 
+<<<<<<< Updated upstream
         if (currentBullets < lastBulletCount) TriggerShake();                      // DÃ©clenche le tremblement Ã  chaque tir
+=======
+        // Détecte une diminution du nombre de munitions pour déclencher le tremblement
+        if (currentBullets < lastBulletCount)
+        {
+            TriggerShake();
+        }
+>>>>>>> Stashed changes
 
         ammoText.text = "0" + currentBullets.ToString();                           // Affiche avec un zÃ©ro devant (ex: 01, 00)
 
+<<<<<<< Updated upstream
+=======
+        // Détecte le passage à zéro munitions pour déclencher le flash rouge
+>>>>>>> Stashed changes
         if (currentBullets == 0 && lastBulletCount > 0)
         {
             isFlashing = true;                                                      // Active le flash au moment exact oÃ¹ les munitions passent Ã  0
             flashTimer = 0f;                                                        // Repart du dÃ©but pour un cycle propre
         }
 
+<<<<<<< Updated upstream
         lastBulletCount = currentBullets;                                           // Met Ã  jour pour la prochaine frame
 
+=======
+        // Gestion du flash rouge
+>>>>>>> Stashed changes
         if (currentBullets == 0)
         {
             if (isFlashing)
             {
+<<<<<<< Updated upstream
                 flashTimer += Time.deltaTime * flashSpeed;                          // Avance le timer du flash
                 float pingPong = Mathf.PingPong(flashTimer, 1f);                   // Valeur oscillante entre 0 et 1
                 ammoText.color = Color.Lerp(normalColor, emptyColor, pingPong);    // Interpolation de couleur blanc â†’ rouge â†’ blanc
@@ -79,23 +118,56 @@ public class AmmoUI : MonoBehaviour                                             
             else
             {
                 ammoText.color = emptyColor;                                        // Reste rouge fixe si le flash n'est pas actif
+=======
+                flashTimer += Time.deltaTime * flashSpeed;
+                // Lerp entre la couleur normale et la couleur vide pour créer un effet de flash pulsant
+                ammoText.color = Color.Lerp(normalColor, emptyColor, Mathf.PingPong(flashTimer, 1f));
+            }
+            else
+            {
+                // Si pour une raison quelconque le flash n'est pas actif, assure que la couleur est rouge
+                ammoText.color = emptyColor;
+>>>>>>> Stashed changes
             }
         }
         else
         {
+<<<<<<< Updated upstream
             isFlashing = false;                                                 // DÃ©sactive le flash dÃ¨s que les munitions reviennent
             wasAtPeak = false;                                                 // RÃ©initialise le dÃ©tecteur de pic
             ammoText.color = normalColor;                                           // Remet la couleur normale
+=======
+            // Si le nombre de munitions est supérieur à zéro, arrête le flash et rétablit la couleur normale
+            isFlashing = false;
+            ammoText.color = normalColor;
+>>>>>>> Stashed changes
         }
 
         if (isShaking)
         {
+<<<<<<< Updated upstream
             shakeTimer += Time.deltaTime;                                           // Avance le timer du tremblement
             if (shakeTimer < shakeDuration)
             {
                 ammoText.transform.localPosition = originalPosition + new Vector3(
                     Random.Range(-shakeIntensity, shakeIntensity),
                     Random.Range(-shakeIntensity, shakeIntensity), 0f);             // DÃ©placement alÃ©atoire pour l'effet de tremblement
+=======
+            // Incrémente le timer de tremblement
+            shakeTimer += Time.deltaTime;
+
+            // Tant que le timer de tremblement est inférieur à la durée définie, applique un tremblement aléatoire
+            if (shakeTimer < shakeDuration)
+            {
+                // Génère un offset de tremblement aléatoire dans les axes X et Y
+                Vector3 shakeOffset = new Vector3(
+                    Random.Range(-shakeIntensity, shakeIntensity),
+                    Random.Range(-shakeIntensity, shakeIntensity),
+                    0f
+                );
+                // Applique l'offset de tremblement à la position du texte
+                ammoText.transform.localPosition = originalPosition + shakeOffset;
+>>>>>>> Stashed changes
             }
             else
             {
@@ -105,5 +177,15 @@ public class AmmoUI : MonoBehaviour                                             
         }
     }
 
+<<<<<<< Updated upstream
     private void TriggerShake() { isShaking = true; shakeTimer = 0f; }            // DÃ©marre le tremblement â€” appelÃ© Ã  chaque tir
+=======
+    // Méthode pour déclencher le tremblement du texte
+    private void TriggerShake()
+    {
+        // Réinitialise le timer de tremblement et active le tremblement
+        isShaking = true;
+        shakeTimer = 0f;
+    }
+>>>>>>> Stashed changes
 }
