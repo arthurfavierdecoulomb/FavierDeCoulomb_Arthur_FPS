@@ -12,11 +12,18 @@ using System.Collections.Generic;
 // de système de génération procédurale. je me suis aidé des resources internet et des videos
 // youtubes pour le construire, et j'ai essayé de faire un code propre et commenté
 // pour que ce soit facile à comprendre et à modifier.
-// Merci d'avoir lu, Arthur. 
+// Merci d'avoir lu, Arthur.
+
 // ═══════════════════════════════════════════════════════════════════════════════
 public class MapGenerator : MonoBehaviour
 {
+    // ── SINGLETON ─────────────────────────────────────────────────────────────
+
+    // Singleton accessible globalement depuis LoadingScreen et d'autres scripts.
+    public static MapGenerator Instance;
+
     // ── PREFABS ───────────────────────────────────────────────────────────────
+
     [Header("Prefabs - Sol & Plafond")]
     [Tooltip("Prefab utilisé pour chaque dalle de sol")]
     [SerializeField] private GameObject floorPrefab;
@@ -48,6 +55,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private GameObject tonneauxPrefab;
 
     // ── ÉCHELLES & ROTATIONS ─────────────────────────────────────────────────
+
     [Header("Echelle des prefabs")]
     [Tooltip("Échelle appliquée aux prefabs de sol à l'instantiation")]
     [SerializeField] private Vector3 floorScale = Vector3.one;
@@ -77,6 +85,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private float decoYOffset = 0f;
 
     // ── PORTES ────────────────────────────────────────────────────────────────
+
     [Header("Options - Portes")]
     [Tooltip("Probabilité qu'une porte soit en verre plutôt qu'en bois (0 = toujours bois, 1 = toujours verre)")]
     [SerializeField][Range(0f, 1f)] private float glassVsWoodChance = 0.4f;
@@ -86,6 +95,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private float doubleDoorYOffset = 0f;
 
     // ── PARAMÈTRES DE GÉNÉRATION ──────────────────────────────────────────────
+
     [Header("Parametres de generation")]
     [Tooltip("Nombre de pièces à générer")]
     [SerializeField] private int roomCount = 6;
@@ -111,6 +121,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float largeRoomRatio = 0.4f;
 
     // ── JOUEUR ────────────────────────────────────────────────────────────────
+
     [Header("Joueur")]
     [Tooltip("Glisse ici le joueur déjà présent dans la scène (pas un prefab)")]
     [SerializeField] private GameObject player;
@@ -118,6 +129,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private float playerSpawnYOffset = 1f;
 
     // ── UI ────────────────────────────────────────────────────────────────────
+
     [Header("UI")]
     [Tooltip("L'UI du jeu à cacher pendant le chargement")]
     [SerializeField] private GameObject gameUIPanel;
@@ -127,6 +139,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private GameObject victoryScreenPanel;
 
     // ── ENNEMIS ───────────────────────────────────────────────────────────────
+
     [Header("Ennemis")]
     [Tooltip("Assigne le WaveManager de la scène")]
     [SerializeField] private WaveManager waveManager;
@@ -140,11 +153,13 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private float zombieSpawnYOffset = 0.1f;
 
     // ── DÉCORATION ────────────────────────────────────────────────────────────
+
     [Header("Decoration")]
     [Tooltip("Nombre d'objets de décoration par pièce")]
     [SerializeField] private int decoPerRoom = 2;
 
     // ── CAMÉRA CINÉMATIQUE ────────────────────────────────────────────────────
+
     [Header("Caméra cinématique")]
     [Tooltip("Caméra dédiée au survol de la map pendant la génération")]
     [SerializeField] private Camera cinematicCamera;
@@ -156,6 +171,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private float returnDuration = 1.8f;
 
     // ── ÉTAT INTERNE ──────────────────────────────────────────────────────────
+
     private enum TileType { Empty, Floor, Corridor }
 
     private TileType[,] grid;
@@ -168,8 +184,22 @@ public class MapGenerator : MonoBehaviour
     private HashSet<Vector2Int> doorTilesCache;
 
     // ─────────────────────────────────────────────────────────────────────────
-    void Start() => StartCoroutine(GenerateMapRoutine());
 
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    void Start()
+    {
+        // Enregistre ce composant comme singleton accessible globalement.
+        
+
+        // La génération n'est plus lancée automatiquement au démarrage.
+        // Elle est désormais déclenchée par le bouton "Jouer" via LoadingScreen.OnPlayButtonClicked().
+    }
+
+    // Appelé publiquement par LoadingScreen.OnPlayButtonClicked().
     public void GenerateMap()
     {
         if (isGenerating)
@@ -207,11 +237,8 @@ public class MapGenerator : MonoBehaviour
 
         if (gameUIPanel != null) gameUIPanel.SetActive(false);
 
-        if (LoadingScreen.Instance != null)
-        {
-            LoadingScreen.Instance.Show();
-            yield return LoadingScreen.Instance.WaitUntilReady();
-        }
+        // L'écran de chargement est déjà ouvert et sur le panneau progression
+        // (activé par LoadingScreen.OnPlayButtonClicked), donc on ne rappelle pas Show().
 
         if (player != null) player.SetActive(false);
         Camera playerCam = player != null ? player.GetComponentInChildren<Camera>() : null;

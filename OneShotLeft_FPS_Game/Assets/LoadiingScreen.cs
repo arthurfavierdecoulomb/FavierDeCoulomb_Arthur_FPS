@@ -25,6 +25,23 @@ public class LoadingScreen : MonoBehaviour
     [SerializeField] private GameObject progressPanel;
 
 
+    // ─── Menu ─────────────────────────────────────────────────────────────
+
+    [Header("Menu")]
+
+    // Panneau menu affiché après la fin de l'intro, avec le bouton Jouer.
+    [SerializeField] private GameObject menuPanel;
+
+    [Header("Bouton")]
+    [SerializeField] private Button playButton;
+
+    // Durée du fade-in du menu en secondes.
+    [SerializeField] private float menuFadeInDuration = 0.5f;
+
+    // CanvasGroup du menuPanel, utilisé pour le fade (créé automatiquement si absent).
+    private CanvasGroup menuCanvasGroup;
+
+
     // ─── Intro – Cercle ───────────────────────────────────────────────────
 
     [Header("Intro – Cercle")]
@@ -142,6 +159,10 @@ public class LoadingScreen : MonoBehaviour
     private float currentProgress = 0f;
 
 
+    
+
+
+
     // ─── Initialisation ───────────────────────────────────────────────────
 
     void Awake()
@@ -159,6 +180,35 @@ public class LoadingScreen : MonoBehaviour
 
         audioSource.playOnAwake = false;
         audioSource.spatialBlend = 0f;
+
+        // Récupère ou crée le CanvasGroup pour le fade-in du menu.
+        if (menuPanel != null)
+        {
+            menuCanvasGroup = menuPanel.GetComponent<CanvasGroup>();
+            if (menuCanvasGroup == null)
+                menuCanvasGroup = menuPanel.AddComponent<CanvasGroup>();
+
+            // Le menu est caché au démarrage, il apparaîtra après l'intro.
+            menuPanel.SetActive(false);
+        }
+
+        if (playButton != null)
+            playButton.onClick.AddListener(OnPlayButtonClicked);
+        else
+            Debug.LogError("playButton non assigné !");
+    }
+
+    void Start()
+    {
+        StartCoroutine(Boot());
+    }
+
+    IEnumerator Boot()
+    {
+        Show();
+        yield return StartCoroutine(WaitUntilReady());
+        // WaitUntilReady() finit après le fade-in du menu.
+        // Le bouton "Jouer" prend le relais via OnPlayButtonClicked().
     }
 
     void Update()
@@ -175,8 +225,6 @@ public class LoadingScreen : MonoBehaviour
     // ─── API publique ─────────────────────────────────────────────────────
 
     // Retourne true si le panneau de chargement est actuellement visible.
-    // À utiliser à la place de gameObject.activeSelf dans les autres scripts
-    // (le GameObject du LoadingScreen reste toujours actif en scène).
     public bool IsVisible => loadingPanel != null && loadingPanel.activeSelf;
 
     // Affiche l'écran de chargement et démarre avec le panneau d'intro.
@@ -189,6 +237,10 @@ public class LoadingScreen : MonoBehaviour
         loadingPanel.SetActive(true);
         progressPanel.SetActive(false);
         introPanel.SetActive(true);
+
+        // S'assure que le menu est masqué à chaque nouvelle ouverture.
+        if (menuPanel != null)
+            menuPanel.SetActive(false);
     }
 
     // Coroutine à attendre pour bloquer jusqu'à la fin de l'intro.
@@ -211,6 +263,36 @@ public class LoadingScreen : MonoBehaviour
         // N'écrase le texte que si une étape est explicitement fournie.
         if (txtEtape != null && etape != "")
             txtEtape.text = etape;
+    }
+
+    // ─── Bouton Jouer ─────────────────────────────────────────────────────
+
+    // Appelé par le bouton "Jouer" du menu via l'Inspector (OnClick).
+    // Masque le menu, affiche la barre de progression et lance la génération de map.
+    public void OnPlayButtonClicked()
+    {
+        Debug.Log("OnPlayButtonClicked appelé");
+
+        if (menuPanel != null)
+            menuPanel.SetActive(false);
+        else
+            Debug.LogError("menuPanel est NULL !");
+
+        if (progressPanel != null)
+        {
+            progressPanel.SetActive(true);
+            Debug.Log("progressPanel activé");
+        }
+        else
+            Debug.LogError("progressPanel est NULL !");
+
+        if (MapGenerator.Instance != null)
+        {
+            Debug.Log("GenerateMap() appelé");
+            MapGenerator.Instance.GenerateMap();
+        }
+        else
+            Debug.LogError("MapGenerator.Instance est NULL !");
     }
 
 
@@ -275,12 +357,39 @@ public class LoadingScreen : MonoBehaviour
         // Laisse le temps aux sons de se terminer avant de passer à la suite.
         yield return new WaitForSeconds(3f);
 
-        // ── PHASE 4 : Barre de progression ────────────────────────────────
+        // ── PHASE 3 : Affichage du menu ───────────────────────────────────
 
         // NOTE : StopAllCoroutines() supprimé intentionnellement —
         // il tuait GenerateMapRoutine() qui tourne en parallèle dans MapGenerator.
         introPanel.SetActive(false);
-        progressPanel.SetActive(true);
+
+        // Fade-in du menu après la fin de l'intro.
+        yield return StartCoroutine(ShowMenu());
+    }
+
+
+    // ─── Fade-in du menu ─────────────────────────────────────────────────
+
+    IEnumerator ShowMenu()
+    {
+        if (menuPanel == null || menuCanvasGroup == null)
+        {
+            Debug.LogWarning("LoadingScreen: menuPanel ou menuCanvasGroup non assigné !");
+            yield break;
+        }
+
+        menuCanvasGroup.alpha = 0f;
+        menuPanel.SetActive(true);
+
+        float elapsed = 0f;
+        while (elapsed < menuFadeInDuration)
+        {
+            elapsed += Time.deltaTime;
+            menuCanvasGroup.alpha = Mathf.Clamp01(elapsed / menuFadeInDuration);
+            yield return null;
+        }
+
+        menuCanvasGroup.alpha = 1f;
     }
 
 
@@ -319,7 +428,6 @@ public class LoadingScreen : MonoBehaviour
     // ─── Son ─────────────────────────────────────────────────────────────
 
     // Joue un clip audio en one-shot avec le volume d'intro défini dans l'Inspector.
-    // Ne fait rien si la source ou le clip est manquant.
     void PlaySound(AudioClip clip)
     {
         if (audioSource == null || clip == null) return;
